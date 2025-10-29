@@ -73,7 +73,7 @@
 .tab-position-top .tab-button,
 .tab-position-bottom .tab-button {
   flex: 1 1 0;
-  min-width: 32px;
+  min-width: 40px;
   max-width: 100%;
 }
 
@@ -92,7 +92,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 32px;
+  height: 40px;
   line-height: 1;
   box-sizing: border-box;
 }
