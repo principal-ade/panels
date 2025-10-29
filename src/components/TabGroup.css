@@ -19,11 +19,17 @@
   display: flex;
   background: var(--tab-list-bg, #f5f5f5);
   border-bottom: 1px solid var(--tab-border, #ddd);
-  gap: 2px;
-  padding: 4px;
+  gap: 0;
+  padding: 0;
   flex-shrink: 0;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.tab-list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
 }
 
 .tab-position-top .tab-list,
@@ -32,7 +38,17 @@
 }
 
 .tab-list.centered {
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+@media (min-width: 0) {
+  .tab-list.centered {
+    justify-content: center;
+  }
+
+  .tab-list.centered:has(.tab-button:nth-child(n)) {
+    justify-content: flex-start;
+  }
 }
 
 .tab-position-bottom .tab-list {
@@ -57,13 +73,14 @@
 .tab-position-top .tab-button,
 .tab-position-bottom .tab-button {
   flex: 1 1 0;
-  min-width: max-content;
+  min-width: 32px;
+  max-width: 100%;
 }
 
 .tab-button {
   background: var(--tab-bg, #fff);
   border: 1px solid var(--tab-border, #ddd);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 8px 16px;
   cursor: pointer;
   font-size: 14px;

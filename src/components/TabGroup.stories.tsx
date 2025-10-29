@@ -114,8 +114,21 @@ export const OverflowingTabs: Story = {
     panelIds: demoPanels.map(panel => panel.id),
   },
   render: args => (
-    <StoryContainer>
-      <TabGroup {...args} />
-    </StoryContainer>
+    <ThemeProvider theme={terminalTheme}>
+      <div
+        style={{
+          width: '250px',
+          height: '300px',
+          margin: '0 auto',
+          padding: '1rem',
+          background: '#f0f0f0',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div style={{ background: '#fff', border: '1px solid #ddd', height: '100%' }}>
+          <TabGroup {...args} />
+        </div>
+      </div>
+    </ThemeProvider>
   ),
 };
