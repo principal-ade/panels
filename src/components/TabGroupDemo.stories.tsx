@@ -1,6 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
 import { ThemeProvider, terminalTheme } from '@a24z/industry-theme';
+import {
+  Folder,
+  FileText,
+  Wrench,
+  Terminal,
+  Keyboard,
+  ClipboardList,
+  Eye
+} from 'lucide-react';
 import { PanelConfigurator, PanelLayout, PanelDefinition } from './PanelConfigurator';
 import { ConfigurablePanelLayout, PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 
@@ -20,8 +29,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'nav',
     label: 'Navigation',
-    icon: '📁',
-    preview: <div style={{ fontSize: '0.7rem' }}>📁 Nav Menu</div>,
+    icon: <Folder size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><Folder size={12} /> Nav Menu</div>,
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Navigation Panel</h3>
@@ -37,8 +46,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'main',
     label: 'Main Content',
-    icon: '📄',
-    preview: <div style={{ fontSize: '0.7rem' }}>📄 Content</div>,
+    icon: <FileText size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><FileText size={12} /> Content</div>,
     content: (
       <div style={{ padding: '20px' }}>
         <h2>Main Content Area</h2>
@@ -50,8 +59,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'tools',
     label: 'Tools',
-    icon: '🔧',
-    preview: <div style={{ fontSize: '0.7rem' }}>🔧 Tools</div>,
+    icon: <Wrench size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><Wrench size={12} /> Tools</div>,
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Tools Panel</h3>
@@ -63,8 +72,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'console',
     label: 'Console',
-    icon: '💻',
-    preview: <div style={{ fontSize: '0.7rem' }}>💻 Console</div>,
+    icon: <Terminal size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><Terminal size={12} /> Console</div>,
     content: (
       <div style={{ padding: '20px', background: '#1e1e1e', color: '#00ff00', fontFamily: 'monospace', height: '100%' }}>
         <div>Console output:</div>
@@ -76,8 +85,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'terminal',
     label: 'Terminal',
-    icon: '⌨️',
-    preview: <div style={{ fontSize: '0.7rem' }}>⌨️ Terminal</div>,
+    icon: <Keyboard size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><Keyboard size={12} /> Terminal</div>,
     content: (
       <div style={{ padding: '20px', background: '#000', color: '#0f0', fontFamily: 'monospace', height: '100%' }}>
         <div>user@host:~$ </div>
@@ -87,8 +96,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'output',
     label: 'Output',
-    icon: '📋',
-    preview: <div style={{ fontSize: '0.7rem' }}>📋 Output</div>,
+    icon: <ClipboardList size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><ClipboardList size={12} /> Output</div>,
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Output Panel</h3>
@@ -101,8 +110,8 @@ const demopanels: PanelDefinitionWithContent[] = [
   {
     id: 'preview',
     label: 'Preview',
-    icon: '👁️',
-    preview: <div style={{ fontSize: '0.7rem' }}>👁️ Preview</div>,
+    icon: <Eye size={20} />,
+    preview: <div style={{ fontSize: '0.7rem' }}><Eye size={12} /> Preview</div>,
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Preview Panel</h3>

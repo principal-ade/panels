@@ -1,6 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { ThemeProvider, terminalTheme } from '@a24z/industry-theme';
+import {
+  BarChart3,
+  FileText,
+  Lightbulb,
+  TrendingUp,
+  Calendar,
+  Settings,
+  ScrollText,
+  Ruler
+} from 'lucide-react';
 import { TabGroup } from './TabGroup';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 
@@ -8,56 +18,56 @@ const demoPanels: PanelDefinitionWithContent[] = [
   {
     id: 'tab-1',
     label: 'Overview',
-    icon: '📊',
+    icon: <BarChart3 size={20} />,
     preview: <div>Overview</div>,
     content: <div style={{ padding: '1rem' }}>Overview content</div>,
   },
   {
     id: 'tab-2',
     label: 'Details',
-    icon: '📝',
+    icon: <FileText size={20} />,
     preview: <div>Details</div>,
     content: <div style={{ padding: '1rem' }}>Detailed information</div>,
   },
   {
     id: 'tab-3',
     label: 'Insights',
-    icon: '💡',
+    icon: <Lightbulb size={20} />,
     preview: <div>Insights</div>,
     content: <div style={{ padding: '1rem' }}>Insightful analysis</div>,
   },
   {
     id: 'tab-4',
     label: 'Reports',
-    icon: '📈',
+    icon: <TrendingUp size={20} />,
     preview: <div>Reports</div>,
     content: <div style={{ padding: '1rem' }}>Reporting dashboard</div>,
   },
   {
     id: 'tab-5',
     label: 'Activity',
-    icon: '📅',
+    icon: <Calendar size={20} />,
     preview: <div>Activity</div>,
     content: <div style={{ padding: '1rem' }}>Recent activity feed</div>,
   },
   {
     id: 'tab-6',
     label: 'Settings',
-    icon: '⚙️',
+    icon: <Settings size={20} />,
     preview: <div>Settings</div>,
     content: <div style={{ padding: '1rem' }}>Configuration settings</div>,
   },
   {
     id: 'tab-7',
     label: 'Logs',
-    icon: '📜',
+    icon: <ScrollText size={20} />,
     preview: <div>Logs</div>,
     content: <div style={{ padding: '1rem' }}>System logs</div>,
   },
   {
     id: 'tab-8',
     label: 'Metrics',
-    icon: '📐',
+    icon: <Ruler size={20} />,
     preview: <div>Metrics</div>,
     content: <div style={{ padding: '1rem' }}>Performance metrics</div>,
   },
