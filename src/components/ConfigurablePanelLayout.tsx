@@ -227,42 +227,47 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   const middleStartTimeRef = useRef<number | undefined>(undefined);
   const rightStartTimeRef = useRef<number | undefined>(undefined);
 
-  // Generic animation function
-  const animatePanel = useCallback(
+  // Multi-panel animation function for coordinated resizing
+  const animateMultiplePanels = useCallback(
     (
-      panelRef: React.RefObject<ImperativePanelHandle | null>,
-      fromSize: number,
-      toSize: number,
-      animationFrameRef: React.MutableRefObject<number | undefined>,
-      startTimeRef: React.MutableRefObject<number | undefined>,
+      animations: Array<{
+        panelRef: React.RefObject<ImperativePanelHandle | null>;
+        fromSize: number;
+        toSize: number;
+        animationFrameRef: React.MutableRefObject<number | undefined>;
+        startTimeRef: React.MutableRefObject<number | undefined>;
+      }>,
       onComplete?: () => void
     ) => {
-      if (!panelRef.current) return;
+      // Validate all panel refs exist
+      const validAnimations = animations.filter(anim => anim.panelRef.current);
+      if (validAnimations.length === 0) return;
 
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      // Cancel any existing animations
+      validAnimations.forEach(anim => {
+        if (anim.animationFrameRef.current) {
+          cancelAnimationFrame(anim.animationFrameRef.current);
+        }
+      });
 
-      startTimeRef.current = performance.now();
-
-      // Instead of updating every frame, update only at specific intervals
-      // This reduces the number of layout recalculations
-      const steps = 10; // Only 10 updates instead of 30-40
+      const steps = 10;
       let currentStep = 0;
 
       const animate = () => {
-        if (!panelRef.current || !startTimeRef.current) return;
-
         currentStep++;
         const progress = currentStep / steps;
 
         if (progress >= 1) {
-          // Final update
-          if (toSize === 0) {
-            panelRef.current.collapse();
-          } else {
-            panelRef.current.resize(toSize);
-          }
+          // Final update - set all panels to their target sizes
+          validAnimations.forEach(anim => {
+            if (anim.panelRef.current) {
+              if (anim.toSize === 0) {
+                anim.panelRef.current.collapse();
+              } else {
+                anim.panelRef.current.resize(anim.toSize);
+              }
+            }
+          });
           if (onComplete) onComplete();
           return;
         }
@@ -273,11 +278,16 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
             ? 4 * progress * progress * progress
             : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
-        const newSize = fromSize + (toSize - fromSize) * eased;
-        panelRef.current.resize(newSize);
+        // Update all panels simultaneously
+        validAnimations.forEach(anim => {
+          if (anim.panelRef.current) {
+            const newSize = anim.fromSize + (anim.toSize - anim.fromSize) * eased;
+            anim.panelRef.current.resize(newSize);
+          }
+        });
 
-        // Schedule next update
-        animationFrameRef.current = requestAnimationFrame(() => {
+        // Schedule next update (use the first animation's ref for tracking)
+        validAnimations[0].animationFrameRef.current = requestAnimationFrame(() => {
           setTimeout(animate, animationDuration / steps);
         });
       };
@@ -293,6 +303,8 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
 
     flushSync(() => {
       setLeftAnimating(true);
+      setMiddleAnimating(true);
+      setRightAnimating(true);
       setLeftCollapsed(true);
     });
     if (onLeftCollapseStart) onLeftCollapseStart();
@@ -305,17 +317,50 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
       // Get the actual current layout
       const currentLayout = panelGroupRef.current?.getLayout();
       const actualLeftSize = Math.round((currentLayout?.[0] ?? leftSize) * 1000) / 1000;
+      const actualMiddleSize = Math.round((currentLayout?.[1] ?? middleSize) * 1000) / 1000;
+      const actualRightSize = Math.round((currentLayout?.[2] ?? rightSize) * 1000) / 1000;
 
+      // Calculate proportional redistribution
+      // Remaining panels get space proportionally to their current sizes
+      const remainingTotal = actualMiddleSize + actualRightSize;
+      const newMiddleSize = remainingTotal > 0 ? (actualMiddleSize / remainingTotal) * 100 : (isMiddleActive ? 50 : 0);
+      const newRightSize = remainingTotal > 0 ? (actualRightSize / remainingTotal) * 100 : (isRightActive ? 50 : 0);
 
-      animatePanel(
-        leftPanelRef,
-        actualLeftSize,
-        0,
-        leftAnimationFrameRef,
-        leftStartTimeRef,
+      // Update last expanded sizes for middle and right panels
+      if (newMiddleSize > 0) setLastExpandedMiddleSize(newMiddleSize);
+      if (newRightSize > 0) setLastExpandedRightSize(newRightSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: 0,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: newMiddleSize,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: newRightSize,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
           setLeftSize(0);
+          setMiddleSize(newMiddleSize);
+          setRightSize(newRightSize);
           setLeftAnimating(false);
+          setMiddleAnimating(false);
+          setRightAnimating(false);
           if (onLeftCollapseComplete) onLeftCollapseComplete();
         }
       );
@@ -324,8 +369,12 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     leftAnimating,
     isDragging,
     leftSize,
+    middleSize,
+    rightSize,
+    isMiddleActive,
+    isRightActive,
     collapsiblePanels.left,
-    animatePanel,
+    animateMultiplePanels,
     onLeftCollapseStart,
     onLeftCollapseComplete,
   ]);
@@ -335,6 +384,8 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
 
     flushSync(() => {
       setLeftAnimating(true);
+      setMiddleAnimating(true);
+      setRightAnimating(true);
       setLeftCollapsed(false);
     });
     if (onLeftExpandStart) onLeftExpandStart();
@@ -344,18 +395,57 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     }
 
     leftAnimationFrameRef.current = requestAnimationFrame(() => {
-      // Use the last expanded size to restore the panel to its previous size
-      const targetSize = lastExpandedLeftSize || computedDefaultSizes.left;
+      // Get the actual current layout
+      const currentLayout = panelGroupRef.current?.getLayout();
+      const actualLeftSize = Math.round((currentLayout?.[0] ?? 0) * 1000) / 1000;
+      const actualMiddleSize = Math.round((currentLayout?.[1] ?? middleSize) * 1000) / 1000;
+      const actualRightSize = Math.round((currentLayout?.[2] ?? rightSize) * 1000) / 1000;
 
-      animatePanel(
-        leftPanelRef,
-        0,
-        targetSize,
-        leftAnimationFrameRef,
-        leftStartTimeRef,
+      // Use the last expanded size to restore the panel to its previous size
+      const targetLeftSize = lastExpandedLeftSize || computedDefaultSizes.left;
+
+      // Calculate proportional redistribution for other panels
+      // They need to shrink proportionally to make room
+      const spaceForOthers = 100 - targetLeftSize;
+      const currentOthersTotal = actualMiddleSize + actualRightSize;
+      const newMiddleSize = currentOthersTotal > 0 ? (actualMiddleSize / currentOthersTotal) * spaceForOthers : (isMiddleActive ? spaceForOthers / 2 : 0);
+      const newRightSize = currentOthersTotal > 0 ? (actualRightSize / currentOthersTotal) * spaceForOthers : (isRightActive ? spaceForOthers / 2 : 0);
+
+      // Update last expanded sizes for middle and right panels
+      if (newMiddleSize > 0) setLastExpandedMiddleSize(newMiddleSize);
+      if (newRightSize > 0) setLastExpandedRightSize(newRightSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: targetLeftSize,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: newMiddleSize,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: newRightSize,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
-          setLeftSize(targetSize);
+          setLeftSize(targetLeftSize);
+          setMiddleSize(newMiddleSize);
+          setRightSize(newRightSize);
           setLeftAnimating(false);
+          setMiddleAnimating(false);
+          setRightAnimating(false);
           if (onLeftExpandComplete) onLeftExpandComplete();
         }
       );
@@ -363,10 +453,14 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   }, [
     leftAnimating,
     isDragging,
+    middleSize,
+    rightSize,
     computedDefaultSizes.left,
     lastExpandedLeftSize,
+    isMiddleActive,
+    isRightActive,
     collapsiblePanels.left,
-    animatePanel,
+    animateMultiplePanels,
     onLeftExpandStart,
     onLeftExpandComplete,
   ]);
@@ -376,6 +470,8 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     if (rightAnimating || isDragging || !collapsiblePanels.right) return;
 
     flushSync(() => {
+      setLeftAnimating(true);
+      setMiddleAnimating(true);
       setRightAnimating(true);
       setRightCollapsed(true);
     });
@@ -388,16 +484,49 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     rightAnimationFrameRef.current = requestAnimationFrame(() => {
       // Get the actual current layout
       const currentLayout = panelGroupRef.current?.getLayout();
+      const actualLeftSize = Math.round((currentLayout?.[0] ?? leftSize) * 1000) / 1000;
+      const actualMiddleSize = Math.round((currentLayout?.[1] ?? middleSize) * 1000) / 1000;
       const actualRightSize = Math.round((currentLayout?.[2] ?? rightSize) * 1000) / 1000;
 
-      animatePanel(
-        rightPanelRef,
-        actualRightSize,
-        0,
-        rightAnimationFrameRef,
-        rightStartTimeRef,
+      // Calculate proportional redistribution
+      const remainingTotal = actualLeftSize + actualMiddleSize;
+      const newLeftSize = remainingTotal > 0 ? (actualLeftSize / remainingTotal) * 100 : (isLeftActive ? 50 : 0);
+      const newMiddleSize = remainingTotal > 0 ? (actualMiddleSize / remainingTotal) * 100 : (isMiddleActive ? 50 : 0);
+
+      // Update last expanded sizes for left and middle panels
+      if (newLeftSize > 0) setLastExpandedLeftSize(newLeftSize);
+      if (newMiddleSize > 0) setLastExpandedMiddleSize(newMiddleSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: newLeftSize,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: newMiddleSize,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: 0,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
+          setLeftSize(newLeftSize);
+          setMiddleSize(newMiddleSize);
           setRightSize(0);
+          setLeftAnimating(false);
+          setMiddleAnimating(false);
           setRightAnimating(false);
           if (onRightCollapseComplete) onRightCollapseComplete();
         }
@@ -406,9 +535,13 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   }, [
     rightAnimating,
     isDragging,
+    leftSize,
+    middleSize,
     rightSize,
+    isLeftActive,
+    isMiddleActive,
     collapsiblePanels.right,
-    animatePanel,
+    animateMultiplePanels,
     onRightCollapseStart,
     onRightCollapseComplete,
   ]);
@@ -417,6 +550,8 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     if (rightAnimating || isDragging || !collapsiblePanels.right) return;
 
     flushSync(() => {
+      setLeftAnimating(true);
+      setMiddleAnimating(true);
       setRightAnimating(true);
       setRightCollapsed(false);
     });
@@ -427,17 +562,55 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     }
 
     rightAnimationFrameRef.current = requestAnimationFrame(() => {
-      // Use the last expanded size to restore the panel to its previous size
-      const targetSize = lastExpandedRightSize || computedDefaultSizes.right;
+      // Get the actual current layout
+      const currentLayout = panelGroupRef.current?.getLayout();
+      const actualLeftSize = Math.round((currentLayout?.[0] ?? leftSize) * 1000) / 1000;
+      const actualMiddleSize = Math.round((currentLayout?.[1] ?? middleSize) * 1000) / 1000;
+      const actualRightSize = Math.round((currentLayout?.[2] ?? 0) * 1000) / 1000;
 
-      animatePanel(
-        rightPanelRef,
-        0,
-        targetSize,
-        rightAnimationFrameRef,
-        rightStartTimeRef,
+      // Use the last expanded size to restore the panel to its previous size
+      const targetRightSize = lastExpandedRightSize || computedDefaultSizes.right;
+
+      // Calculate proportional redistribution for other panels
+      const spaceForOthers = 100 - targetRightSize;
+      const currentOthersTotal = actualLeftSize + actualMiddleSize;
+      const newLeftSize = currentOthersTotal > 0 ? (actualLeftSize / currentOthersTotal) * spaceForOthers : (isLeftActive ? spaceForOthers / 2 : 0);
+      const newMiddleSize = currentOthersTotal > 0 ? (actualMiddleSize / currentOthersTotal) * spaceForOthers : (isMiddleActive ? spaceForOthers / 2 : 0);
+
+      // Update last expanded sizes for left and middle panels
+      if (newLeftSize > 0) setLastExpandedLeftSize(newLeftSize);
+      if (newMiddleSize > 0) setLastExpandedMiddleSize(newMiddleSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: newLeftSize,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: newMiddleSize,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: targetRightSize,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
-          setRightSize(targetSize);
+          setLeftSize(newLeftSize);
+          setMiddleSize(newMiddleSize);
+          setRightSize(targetRightSize);
+          setLeftAnimating(false);
+          setMiddleAnimating(false);
           setRightAnimating(false);
           if (onRightExpandComplete) onRightExpandComplete();
         }
@@ -446,10 +619,14 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   }, [
     rightAnimating,
     isDragging,
+    leftSize,
+    middleSize,
     computedDefaultSizes.right,
     lastExpandedRightSize,
+    isLeftActive,
+    isMiddleActive,
     collapsiblePanels.right,
-    animatePanel,
+    animateMultiplePanels,
     onRightExpandStart,
     onRightExpandComplete,
   ]);
@@ -468,7 +645,9 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     if (middleAnimating || isDragging || !collapsiblePanels.middle) return;
 
     flushSync(() => {
+      setLeftAnimating(true);
       setMiddleAnimating(true);
+      setRightAnimating(true);
       setMiddleCollapsed(true);
     });
     if (onMiddleCollapseStart) onMiddleCollapseStart();
@@ -479,17 +658,50 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
 
     middleAnimationFrameRef.current = requestAnimationFrame(() => {
       const currentLayout = panelGroupRef.current?.getLayout();
+      const actualLeftSize = Math.round((currentLayout?.[0] ?? leftSize) * 1000) / 1000;
       const actualMiddleSize = Math.round((currentLayout?.[1] ?? middleSize) * 1000) / 1000;
+      const actualRightSize = Math.round((currentLayout?.[2] ?? rightSize) * 1000) / 1000;
 
-      animatePanel(
-        middlePanelRef,
-        actualMiddleSize,
-        0,
-        middleAnimationFrameRef,
-        middleStartTimeRef,
+      // Calculate proportional redistribution
+      const remainingTotal = actualLeftSize + actualRightSize;
+      const newLeftSize = remainingTotal > 0 ? (actualLeftSize / remainingTotal) * 100 : (isLeftActive ? 50 : 0);
+      const newRightSize = remainingTotal > 0 ? (actualRightSize / remainingTotal) * 100 : (isRightActive ? 50 : 0);
+
+      // Update last expanded sizes for left and right panels
+      if (newLeftSize > 0) setLastExpandedLeftSize(newLeftSize);
+      if (newRightSize > 0) setLastExpandedRightSize(newRightSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: newLeftSize,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: 0,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: newRightSize,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
+          setLeftSize(newLeftSize);
           setMiddleSize(0);
+          setRightSize(newRightSize);
+          setLeftAnimating(false);
           setMiddleAnimating(false);
+          setRightAnimating(false);
           if (onMiddleCollapseComplete) onMiddleCollapseComplete();
         }
       );
@@ -497,9 +709,13 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   }, [
     middleAnimating,
     isDragging,
+    leftSize,
     middleSize,
+    rightSize,
+    isLeftActive,
+    isRightActive,
     collapsiblePanels.middle,
-    animatePanel,
+    animateMultiplePanels,
     onMiddleCollapseStart,
     onMiddleCollapseComplete,
   ]);
@@ -508,7 +724,9 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     if (middleAnimating || isDragging || !collapsiblePanels.middle) return;
 
     flushSync(() => {
+      setLeftAnimating(true);
       setMiddleAnimating(true);
+      setRightAnimating(true);
       setMiddleCollapsed(false);
     });
     if (onMiddleExpandStart) onMiddleExpandStart();
@@ -518,17 +736,55 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
     }
 
     middleAnimationFrameRef.current = requestAnimationFrame(() => {
-      const targetSize = lastExpandedMiddleSize || computedDefaultSizes.middle;
+      // Get the actual current layout
+      const currentLayout = panelGroupRef.current?.getLayout();
+      const actualLeftSize = Math.round((currentLayout?.[0] ?? leftSize) * 1000) / 1000;
+      const actualMiddleSize = Math.round((currentLayout?.[1] ?? 0) * 1000) / 1000;
+      const actualRightSize = Math.round((currentLayout?.[2] ?? rightSize) * 1000) / 1000;
 
-      animatePanel(
-        middlePanelRef,
-        0,
-        targetSize,
-        middleAnimationFrameRef,
-        middleStartTimeRef,
+      const targetMiddleSize = lastExpandedMiddleSize || computedDefaultSizes.middle;
+
+      // Calculate proportional redistribution for other panels
+      const spaceForOthers = 100 - targetMiddleSize;
+      const currentOthersTotal = actualLeftSize + actualRightSize;
+      const newLeftSize = currentOthersTotal > 0 ? (actualLeftSize / currentOthersTotal) * spaceForOthers : (isLeftActive ? spaceForOthers / 2 : 0);
+      const newRightSize = currentOthersTotal > 0 ? (actualRightSize / currentOthersTotal) * spaceForOthers : (isRightActive ? spaceForOthers / 2 : 0);
+
+      // Update last expanded sizes for left and right panels
+      if (newLeftSize > 0) setLastExpandedLeftSize(newLeftSize);
+      if (newRightSize > 0) setLastExpandedRightSize(newRightSize);
+
+      animateMultiplePanels(
+        [
+          {
+            panelRef: leftPanelRef,
+            fromSize: actualLeftSize,
+            toSize: newLeftSize,
+            animationFrameRef: leftAnimationFrameRef,
+            startTimeRef: leftStartTimeRef,
+          },
+          {
+            panelRef: middlePanelRef,
+            fromSize: actualMiddleSize,
+            toSize: targetMiddleSize,
+            animationFrameRef: middleAnimationFrameRef,
+            startTimeRef: middleStartTimeRef,
+          },
+          {
+            panelRef: rightPanelRef,
+            fromSize: actualRightSize,
+            toSize: newRightSize,
+            animationFrameRef: rightAnimationFrameRef,
+            startTimeRef: rightStartTimeRef,
+          },
+        ],
         () => {
-          setMiddleSize(targetSize);
+          setLeftSize(newLeftSize);
+          setMiddleSize(targetMiddleSize);
+          setRightSize(newRightSize);
+          setLeftAnimating(false);
           setMiddleAnimating(false);
+          setRightAnimating(false);
           if (onMiddleExpandComplete) onMiddleExpandComplete();
         }
       );
@@ -536,10 +792,14 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   }, [
     middleAnimating,
     isDragging,
+    leftSize,
+    rightSize,
     computedDefaultSizes.middle,
     lastExpandedMiddleSize,
+    isLeftActive,
+    isRightActive,
     collapsiblePanels.middle,
-    animatePanel,
+    animateMultiplePanels,
     onMiddleExpandStart,
     onMiddleExpandComplete,
   ]);
