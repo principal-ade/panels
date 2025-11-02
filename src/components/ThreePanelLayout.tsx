@@ -90,7 +90,7 @@ export const ThreePanelLayout: React.FC<ThreePanelLayoutProps> = ({
   className = '',
   collapsed = { left: false, right: false },
   style,
-  showCollapseButtons = true,
+  showCollapseButtons = false,
   animationDuration = 300,
   animationEasing = 'cubic-bezier(0.4, 0, 0.2, 1)',
   theme,
