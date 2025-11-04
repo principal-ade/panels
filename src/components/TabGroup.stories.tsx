@@ -142,3 +142,72 @@ export const OverflowingTabs: Story = {
     </ThemeProvider>
   ),
 };
+
+export const HiddenTabList: Story = {
+  args: {
+    panelIds: demoPanels.slice(0, 4).map(panel => panel.id),
+    config: {
+      tabPosition: 'top',
+      hideTabList: true,
+      defaultActiveTab: 0,
+    },
+  },
+  render: args => (
+    <StoryContainer>
+      <TabGroup {...args} />
+    </StoryContainer>
+  ),
+};
+
+export const HiddenTabListControlled: Story = {
+  args: {
+    panelIds: demoPanels.slice(0, 4).map(panel => panel.id),
+  },
+  render: args => {
+    const [activeIndex, setActiveIndex] = React.useState(0);
+
+    return (
+      <ThemeProvider theme={terminalTheme}>
+        <div
+          style={{
+            width: '800px',
+            height: '400px',
+            margin: '0 auto',
+            padding: '1rem',
+            background: '#f0f0f0',
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+            {demoPanels.slice(0, 4).map((panel, index) => (
+              <button
+                key={panel.id}
+                onClick={() => setActiveIndex(index)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: activeIndex === index ? '#007bff' : '#fff',
+                  color: activeIndex === index ? '#fff' : '#333',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                {panel.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #ddd', height: 'calc(100% - 3rem)' }}>
+            <TabGroup
+              {...args}
+              config={{
+                hideTabList: true,
+                activeTabIndex: activeIndex,
+                onTabChange: setActiveIndex,
+              }}
+            />
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  },
+};

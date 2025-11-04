@@ -24,6 +24,7 @@ export interface TabsConfig {
   defaultActiveTab?: number;        // Which tab is active by default (index) - for uncontrolled mode
   tabPosition?: 'top' | 'bottom' | 'left' | 'right';
   centered?: boolean;                // Whether to center the tabs
+  hideTabList?: boolean;             // Whether to hide the tab list and show only active tab content
 
   // Controlled mode props
   activeTabIndex?: number;           // Controlled active tab index

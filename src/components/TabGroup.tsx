@@ -36,6 +36,7 @@ export const TabGroup: React.FC<TabGroupProps> = ({
     defaultActiveTab = 0,
     tabPosition = 'top',
     centered = true,
+    hideTabList = false,
     activeTabIndex: controlledIndex,
     onTabChange,
   } = config;
@@ -120,9 +121,9 @@ export const TabGroup: React.FC<TabGroupProps> = ({
 
   return (
     <div className={`tab-group tab-position-${tabPosition} ${className}`} style={themeStyles}>
-      {(tabPosition === 'top' || tabPosition === 'left') && tabList}
+      {!hideTabList && (tabPosition === 'top' || tabPosition === 'left') && tabList}
       {tabContent}
-      {(tabPosition === 'bottom' || tabPosition === 'right') && tabList}
+      {!hideTabList && (tabPosition === 'bottom' || tabPosition === 'right') && tabList}
     </div>
   );
 };
