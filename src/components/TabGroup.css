@@ -95,20 +95,22 @@
 /* Remove overlapping borders for top/bottom positions */
 .tab-position-top .tab-button {
   border-bottom: none;
-  border-right: none;
+  border-top: none;
+  border-left: none;
 }
 
 .tab-position-top .tab-button:last-child {
-  border-right: 1px solid var(--tab-border, #ddd);
+  border-right: none;
 }
 
 .tab-position-bottom .tab-button {
   border-top: none;
-  border-right: none;
+  border-bottom: none;
+  border-left: none;
 }
 
 .tab-position-bottom .tab-button:last-child {
-  border-right: 1px solid var(--tab-border, #ddd);
+  border-right: none;
 }
 
 /* Remove overlapping borders for left/right positions */
