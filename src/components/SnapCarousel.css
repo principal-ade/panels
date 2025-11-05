@@ -8,10 +8,14 @@
   scroll-behavior: smooth;
   gap: var(--snap-carousel-gap, 0px);
   padding: 0;
+  margin: 0;
   width: 100%;
   height: 100%;
   background-color: var(--panel-background);
   box-sizing: border-box;
+  position: relative; /* Contain the scroll context */
+  left: 0; /* Explicitly anchor to left */
+  transform: none; /* Prevent any transforms */
 
   /* Enable container queries */
   container-type: inline-size;
@@ -32,7 +36,7 @@
   scroll-snap-stop: always;
 
   /* Panel sizing: Use dynamic width based on panel count */
-  width: var(--snap-carousel-panel-width, 33.33vw);
+  width: var(--snap-carousel-panel-width, 33.33%);
   height: 100%;
 
   /* Ensure borders don't add to width */
@@ -45,13 +49,6 @@
 /* Note: 2-panel layout responsive behavior is handled via dynamic inline styles in the component */
 
 /* Responsive adjustments for mobile */
-@media (max-width: 768px) {
-  .snap-carousel-container {
-    /* Reduce padding on mobile */
-    padding: 0 8px;
-  }
-}
-
 @media (max-width: 540px) {
   .snap-carousel-panel {
     /* On very small screens, ensure panels fit nicely */

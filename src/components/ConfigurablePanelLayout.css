@@ -43,7 +43,8 @@
 
 .panel-content-wrapper {
   flex: 1;
-  overflow: auto;
+  overflow-x: hidden; /* Never allow horizontal scroll on the wrapper */
+  overflow-y: auto;   /* Allow vertical scroll for overflow content */
   will-change: opacity;
   box-sizing: border-box;
 }

@@ -72,10 +72,12 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
       const targetPanel = container.children[index] as HTMLElement;
 
       if (targetPanel) {
-        targetPanel.scrollIntoView({
+        // Calculate the scroll position directly instead of using scrollIntoView
+        // This prevents scrolling ancestor containers
+        const scrollLeft = targetPanel.offsetLeft;
+        container.scrollTo({
+          left: scrollLeft,
           behavior: 'smooth',
-          block: 'nearest',
-          inline: 'start',
         });
       }
     },
@@ -190,8 +192,8 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
     // We'll use container queries in CSS for this
     panelWidth = '100%'; // Default, CSS container query will override
   } else {
-    // 3+ panels use percentage of container, respecting minPanelWidth
-    // Use max() to ensure panels don't get smaller than minPanelWidth
+    // 3+ panels: use the minimum of minPanelWidth or idealPanelWidth
+    // But always ensure we use percentage, not viewport units
     panelWidth = `max(${minPanelWidth}px, ${idealPanelWidth * 100}%)`;
   }
 

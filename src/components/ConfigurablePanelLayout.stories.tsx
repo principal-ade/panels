@@ -3,7 +3,8 @@ import { fn } from '@storybook/test';
 import { ConfigurablePanelLayout, PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout } from './PanelConfigurator';
 import { slateTheme, terminalTheme } from '@a24z/industry-theme';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { SnapCarousel, SnapCarouselRef } from './SnapCarousel';
 
 const meta = {
   title: 'Components/ConfigurablePanelLayout',
@@ -435,4 +436,232 @@ export const CleanTwoPanelMiddleRight: Story = {
     defaultSizes: { middle: 75, right: 25 },
     theme: slateTheme,
   },
+};
+
+// Sample carousel panel content helper
+const createCarouselPanel = (index: number, color: string) => (
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: `linear-gradient(135deg, ${color}22, ${color}44)`,
+      padding: '2rem',
+      gap: '1rem',
+      boxSizing: 'border-box',
+    }}
+  >
+    <h2 style={{ margin: 0, fontSize: '2rem' }}>Panel {index + 1}</h2>
+    <p style={{ margin: 0, textAlign: 'center', opacity: 0.8 }}>
+      Carousel panel {index + 1}
+    </p>
+    <div style={{ fontSize: '4rem', opacity: 0.5 }}>{index + 1}</div>
+  </div>
+);
+
+// Panels with carousel in the middle
+const panelsWithCarousel: PanelDefinitionWithContent[] = [
+  {
+    id: 'nav',
+    label: 'Navigation',
+    content: (
+      <div style={{ padding: '20px', height: '100%', overflow: 'auto' }}>
+        <h3>Navigation Panel</h3>
+        <ul>
+          <li>Home</li>
+          <li>About</li>
+          <li>Services</li>
+          <li>Contact</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    id: 'carousel',
+    label: 'Carousel Content',
+    content: (
+      <SnapCarousel
+        theme={slateTheme}
+        panels={[
+          createCarouselPanel(0, '#3b82f6'),
+          createCarouselPanel(1, '#8b5cf6'),
+          createCarouselPanel(2, '#ec4899'),
+          createCarouselPanel(3, '#f59e0b'),
+          createCarouselPanel(4, '#10b981'),
+          createCarouselPanel(5, '#06b6d4'),
+        ]}
+        minPanelWidth={350}
+        idealPanelWidth={0.333}
+        showSeparator={false}
+      />
+    ),
+  },
+  {
+    id: 'sidebar',
+    label: 'Sidebar',
+    content: (
+      <div style={{ padding: '20px', height: '100%', overflow: 'auto' }}>
+        <h3>Sidebar</h3>
+        <div style={{ padding: '10px', background: '#f0f0f0', borderRadius: '4px', marginBottom: '10px' }}>
+          Widget 1
+        </div>
+        <div style={{ padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+          Widget 2
+        </div>
+      </div>
+    ),
+  },
+];
+
+// Story with carousel in middle panel - demonstrates the spacing bug
+export const WithCarouselInMiddle: Story = {
+  name: 'With Carousel in Middle Panel',
+  args: {
+    panels: panelsWithCarousel,
+    layout: {
+      left: 'nav',
+      middle: 'carousel',
+      right: 'sidebar',
+    },
+    showCollapseButtons: true,
+    defaultSizes: { left: 20, middle: 60, right: 20 },
+    theme: slateTheme,
+  },
+};
+
+// Interactive story to test the bug - start with right panel collapsed
+const CarouselBugTestComponent = () => {
+  const [rightCollapsed, setRightCollapsed] = useState(true);
+  const carouselRef = useRef<SnapCarouselRef>(null);
+
+  const scrollToLastPanel = () => {
+    // Scroll to panel 6 (index 5)
+    carouselRef.current?.scrollToPanel(5);
+  };
+
+  // Panels with carousel that has a ref
+  const panelsWithCarouselRef: PanelDefinitionWithContent[] = [
+    {
+      id: 'nav',
+      label: 'Navigation',
+      content: (
+        <div style={{ padding: '20px', height: '100%', overflow: 'auto' }}>
+          <h3>Navigation Panel</h3>
+          <ul>
+            <li>Home</li>
+            <li>About</li>
+            <li>Services</li>
+            <li>Contact</li>
+          </ul>
+        </div>
+      ),
+    },
+    {
+      id: 'carousel',
+      label: 'Carousel Content',
+      content: (
+        <SnapCarousel
+          ref={carouselRef}
+          theme={slateTheme}
+          panels={[
+            createCarouselPanel(0, '#3b82f6'),
+            createCarouselPanel(1, '#8b5cf6'),
+            createCarouselPanel(2, '#ec4899'),
+            createCarouselPanel(3, '#f59e0b'),
+            createCarouselPanel(4, '#10b981'),
+            createCarouselPanel(5, '#06b6d4'),
+          ]}
+          minPanelWidth={350}
+          idealPanelWidth={0.333}
+          showSeparator={false}
+        />
+      ),
+    },
+    {
+      id: 'sidebar',
+      label: 'Sidebar',
+      content: (
+        <div style={{ padding: '20px', height: '100%', overflow: 'auto' }}>
+          <h3>Sidebar</h3>
+          <div style={{ padding: '10px', background: '#f0f0f0', borderRadius: '4px', marginBottom: '10px' }}>
+            Widget 1
+          </div>
+          <div style={{ padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+            Widget 2
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '10px', borderBottom: '1px solid #ccc', background: '#f7f7f7' }}>
+        <h4>Test Carousel Spacing Bug</h4>
+        <p style={{ margin: '5px 0', fontSize: '14px' }}>
+          <strong>Instructions:</strong> Click "Jump to Panel 6" and check if there's extra space to the right of the right resize handle.
+        </p>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={scrollToLastPanel}
+            style={{
+              margin: '5px 0',
+              padding: '8px 16px',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            Jump to Panel 6 →
+          </button>
+          <button
+            onClick={() => setRightCollapsed(!rightCollapsed)}
+            style={{
+              margin: '5px 0',
+              padding: '8px 16px',
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            {rightCollapsed ? 'Expand Right Panel' : 'Collapse Right Panel'}
+          </button>
+          <span style={{ fontSize: '14px', color: '#666' }}>
+            Right panel is: <strong>{rightCollapsed ? 'COLLAPSED' : 'EXPANDED'}</strong>
+          </span>
+        </div>
+      </div>
+      <div style={{ flex: 1 }}>
+        <ConfigurablePanelLayout
+          panels={panelsWithCarouselRef}
+          layout={{
+            left: 'nav',
+            middle: 'carousel',
+            right: 'sidebar',
+          }}
+          showCollapseButtons={true}
+          collapsed={{
+            left: false,
+            middle: false,
+            right: rightCollapsed,
+          }}
+          defaultSizes={{ left: 20, middle: 60, right: 20 }}
+          theme={slateTheme}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const CarouselBugTest: Story = {
+  name: 'Carousel Bug Test (Right Collapsed)',
+  render: () => <CarouselBugTestComponent />,
 };
