@@ -53,21 +53,16 @@
 
 .tab-position-bottom .tab-list {
   border-bottom: none;
-  border-top: 1px solid var(--tab-border, #ddd);
+  border-top: none;
 }
 
 .tab-position-left .tab-list,
 .tab-position-right .tab-list {
   flex-direction: column;
   border-bottom: none;
-  border-right: 1px solid var(--tab-border, #ddd);
+  border-right: none;
   width: auto;
   min-width: 120px;
-}
-
-.tab-position-right .tab-list {
-  border-right: none;
-  border-left: 1px solid var(--tab-border, #ddd);
 }
 
 .tab-position-top .tab-button,
