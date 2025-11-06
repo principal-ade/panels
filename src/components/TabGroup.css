@@ -140,7 +140,6 @@
 
 .tab-button:hover {
   background: var(--tab-bg-hover, #f9f9f9);
-  border-color: var(--tab-border-hover, #999);
 }
 
 .tab-button.active {
