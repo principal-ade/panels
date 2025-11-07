@@ -90,6 +90,7 @@
   height: 40px;
   line-height: 1;
   box-sizing: border-box;
+  container-type: inline-size;
 }
 
 /* Remove overlapping borders for top/bottom positions */
@@ -136,6 +137,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.tab-label {
+  display: none;
+}
+
+/* Show label and hide icon when button is 250px or wider */
+@container (min-width: 250px) {
+  .tab-label {
+    display: inline;
+  }
+
+  .tab-icon {
+    display: none;
+  }
 }
 
 .tab-button:hover {

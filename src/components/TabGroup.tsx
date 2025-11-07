@@ -99,7 +99,10 @@ export const TabGroup: React.FC<TabGroupProps> = ({
           title={panel.icon ? panel.label : undefined}
         >
           {panel.icon ? (
-            <span className="tab-icon">{panel.icon}</span>
+            <>
+              <span className="tab-icon">{panel.icon}</span>
+              <span className="tab-label">{panel.label}</span>
+            </>
           ) : (
             panel.label
           )}
