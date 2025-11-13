@@ -14,6 +14,7 @@ export function mapThemeToPanelVars(theme: Theme): Record<string, string> {
     '--panel-button-hover': theme.colors.backgroundHover,
     '--panel-button-border': theme.colors.border,
     '--panel-button-icon': theme.colors.textSecondary,
+    '--panel-accent-bg': theme.colors.primary + '15', // primary color with 15% opacity
   };
 }
 
