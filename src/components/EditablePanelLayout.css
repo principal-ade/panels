@@ -1,0 +1,496 @@
+/* iPhone-style Edit Mode Animations */
+
+@keyframes wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Edit Mode Container */
+.editable-panel-layout {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.editable-panel-layout.edit-mode-active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Apply scale-down to Panel elements in edit mode using data attributes */
+[data-slot][data-edit-mode="true"] {
+  transform: scale(0.95);
+  transform-origin: center center;
+  cursor: grab;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-slot][data-edit-mode="true"]:active {
+  cursor: grabbing;
+}
+
+[data-slot][data-dragging="true"] {
+  cursor: grabbing !important;
+  transform: scale(0.95) !important;
+  transition: none !important;
+}
+
+/* Scale down slightly in edit mode for iPhone effect */
+.edit-mode-active [data-slot][data-edit-mode="true"] {
+  transform-origin: center center;
+}
+
+/* Slot with Overlay */
+.slot-with-overlay {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.slot-with-overlay.edit-mode {
+  /* No wiggle - just static overlay */
+}
+
+.slot-with-overlay.dragging {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slot-with-overlay.drag-over {
+  /* Visual feedback when dragging over */
+}
+
+/* Slot Edit Overlay */
+.slot-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  border: none;
+  pointer-events: auto;
+  cursor: grab;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot-edit-overlay:hover {
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.slot-edit-overlay:active {
+  cursor: grabbing;
+}
+
+/* Drag Indicator */
+.drag-indicator {
+  display: none;
+  /* Hidden - panels themselves show they're draggable */
+}
+
+/* Slot Position Label */
+.slot-position-label {
+  display: none;
+  /* Hidden - not needed */
+}
+
+/* Edit Mode Toggle Button */
+.edit-mode-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-mode-toggle:hover {
+  background: #f9fafb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.edit-mode-toggle.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+/* Edit Mode Overlay */
+.edit-mode-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Panel Configurator in Edit Mode */
+.edit-mode-configurator {
+  position: relative;
+  z-index: 999;
+  padding: 20px;
+  animation: scaleIn 0.3s ease;
+}
+
+/* Panel Slot Styles */
+.panel-slot {
+  position: relative;
+  min-height: 120px;
+  border: 2px dashed transparent;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  padding: 12px;
+}
+
+.panel-slot.edit-mode {
+  border-color: #d1d5db;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.panel-slot.drag-over {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.panel-slot.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* Draggable Panel Item */
+.draggable-panel {
+  position: relative;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.draggable-panel:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.draggable-panel.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.draggable-panel.edit-mode {
+  animation: wiggle 0.4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.draggable-panel.edit-mode:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+.draggable-panel.edit-mode:nth-child(even) {
+  animation-delay: 0.2s;
+}
+
+/* Remove Button */
+.remove-button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.draggable-panel.edit-mode .remove-button {
+  opacity: 1;
+  transform: scale(1);
+  animation: pulse 2s infinite;
+}
+
+.remove-button:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Panel Label */
+.panel-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.panel-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Drag Handle */
+.drag-handle {
+  display: none;
+  width: 24px;
+  height: 24px;
+  opacity: 0.4;
+  cursor: grab;
+}
+
+.edit-mode .drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Drag Overlay (Ghost) */
+.drag-overlay {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: white;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+/* Panel Group (Tabs) */
+.panel-group {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px;
+  background: white;
+}
+
+.panel-group.edit-mode {
+  animation: wiggle 0.5s ease-in-out infinite;
+  border-color: #3b82f6;
+}
+
+.panel-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.panel-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+/* Available Panels List */
+.available-panels {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.available-panels-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.available-panels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Slot Labels */
+.slot-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+}
+
+.slot-indicator.active {
+  background: #3b82f6;
+}
+
+/* Action Buttons */
+.action-buttons {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  display: flex;
+  gap: 12px;
+  padding: 12px 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s ease;
+}
+
+.action-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background: #f9fafb;
+}
+
+.action-button.primary {
+  background: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.action-button.primary:hover {
+  background: #2563eb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .edit-mode-toggle {
+    top: 8px;
+    right: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .action-buttons {
+    bottom: 16px;
+    padding: 10px 16px;
+  }
+
+  .action-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .edit-mode-toggle {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+
+  .edit-mode-toggle:hover {
+    background: #374151;
+  }
+
+  .draggable-panel {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+
+  .available-panels {
+    background: #1f2937;
+  }
+
+  .panel-label {
+    color: #f9fafb;
+  }
+
+  .action-buttons {
+    background: #1f2937;
+  }
+
+  .action-button {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+
+  .action-button:hover {
+    background: #374151;
+  }
+}

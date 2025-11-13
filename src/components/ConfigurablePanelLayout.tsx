@@ -28,6 +28,13 @@ export interface ConfigurablePanelLayoutProps {
   /** Current layout configuration - omit or set positions to null/undefined for two-panel layouts */
   layout: PanelLayout;
 
+  /** Custom data attributes for slot identification (for edit mode) */
+  slotDataAttributes?: {
+    left?: Record<string, string>;
+    middle?: Record<string, string>;
+    right?: Record<string, string>;
+  };
+
   /** Which panels are collapsible - only specify for active panels */
   collapsiblePanels?: {
     left?: boolean;
@@ -102,6 +109,7 @@ export interface ConfigurablePanelLayoutProps {
 export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = ({
   panels,
   layout,
+  slotDataAttributes = {},
   collapsiblePanels = { left: true, middle: false, right: true },
   defaultSizes = { left: 20, middle: 60, right: 20 },
   minSizes = { left: 5, middle: 10, right: 5 },
@@ -1010,6 +1018,7 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
           onExpand={() => setLeftCollapsed(false)}
           className={getPanelClassName('left')}
           style={leftCollapsiblePanelStyle}
+          {...(slotDataAttributes.left || {})}
         >
           <div
             className="panel-content-wrapper"
@@ -1056,6 +1065,7 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
           onExpand={() => setMiddleCollapsed(false)}
           className={getPanelClassName('middle')}
           style={middleCollapsiblePanelStyle}
+          {...(slotDataAttributes.middle || {})}
         >
           <div
             className="panel-content-wrapper"
@@ -1102,6 +1112,7 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
           onExpand={() => setRightCollapsed(false)}
           className={getPanelClassName('right')}
           style={rightCollapsiblePanelStyle}
+          {...(slotDataAttributes.right || {})}
         >
           <div
             className="panel-content-wrapper"
