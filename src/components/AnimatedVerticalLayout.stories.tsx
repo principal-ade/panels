@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { fn } from '@storybook/test';
 import React, { useState } from 'react';
-import { slateTheme } from '@a24z/industry-theme';
+import { slateTheme } from '@principal-ade/industry-theme';
 
 import { AnimatedVerticalLayout, type AnimatedVerticalLayoutProps } from './AnimatedVerticalLayout';
 

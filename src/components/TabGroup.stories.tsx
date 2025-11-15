@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { ThemeProvider, terminalTheme } from '@a24z/industry-theme';
+import { ThemeProvider, terminalTheme } from '@principal-ade/industry-theme';
 import {
   BarChart3,
   FileText,

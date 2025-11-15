@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
-import { ThemeProvider, terminalTheme } from '@a24z/industry-theme';
+import { ThemeProvider, terminalTheme } from '@principal-ade/industry-theme';
 import {
   Folder,
   FileText,

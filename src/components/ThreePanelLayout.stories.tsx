@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import { ThreePanelLayout } from './ThreePanelLayout';
-import { slateTheme, terminalTheme } from '@a24z/industry-theme';
+import { slateTheme, terminalTheme } from '@principal-ade/industry-theme';
 import React from 'react';
 
 const meta = {

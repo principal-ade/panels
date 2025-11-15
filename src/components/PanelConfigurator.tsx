@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useTheme, Theme } from '@a24z/industry-theme';
+import { useTheme, Theme } from '@principal-ade/industry-theme';
 import './PanelConfigurator.css';
 
 export interface PanelDefinition {

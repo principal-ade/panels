@@ -5,7 +5,7 @@ import {
   PanelResizeHandle,
   ImperativePanelHandle,
 } from 'react-resizable-panels';
-import { Theme } from '@a24z/industry-theme';
+import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToPanelVars } from '../utils/themeMapping';
 import './AnimatedResizableLayout.css';
 

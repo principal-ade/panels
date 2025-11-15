@@ -1,11 +1,11 @@
-# @a24z/panels
+# @principal-ade/panels
 
 A modern React panel layout component library built on top of `react-resizable-panels` with enhanced animations, TypeScript support, and common layout patterns.
 
 ## Installation
 
 ```bash
-npm install @a24z/panels
+npm install @principal-ade/panels
 ```
 
 ## Quick Start
@@ -13,8 +13,8 @@ npm install @a24z/panels
 ⚠️ **Important: You must import the CSS file for proper styling:**
 
 ```tsx
-import { AnimatedResizableLayout } from '@a24z/panels';
-import '@a24z/panels/style.css';  // Required!
+import { AnimatedResizableLayout } from '@principal-ade/panels';
+import '@principal-ade/panels/style.css';  // Required!
 
 function App() {
   return (
@@ -193,7 +193,7 @@ interface AdaptiveLayoutProps {
 #### Build Setup
 ```json
 {
-  "name": "@a24z/panels",
+  "name": "@principal-ade/panels",
   "version": "1.0.0",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -247,7 +247,7 @@ import { AnimatedResizableLayout } from './layout-components';
 />
 
 // New
-import { TwoPanelLayout } from '@a24z/panels';
+import { TwoPanelLayout } from '@principal-ade/panels';
 
 <TwoPanelLayout
   leftPanel={<Sidebar />}
@@ -262,7 +262,7 @@ import { TwoPanelLayout } from '@a24z/panels';
 
 #### Basic 3-Panel Layout
 ```tsx
-import { ThreePanelLayout } from '@a24z/panels';
+import { ThreePanelLayout } from '@principal-ade/panels';
 
 function App() {
   return (
@@ -282,7 +282,7 @@ function App() {
 
 #### Responsive Adaptive Layout
 ```tsx
-import { AdaptiveLayout } from '@a24z/panels';
+import { AdaptiveLayout } from '@principal-ade/panels';
 
 function App() {
   return (

@@ -3,7 +3,7 @@ import { fn } from '@storybook/test';
 import { EditableConfigurablePanelLayout } from './EditableConfigurablePanelLayout';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout, PanelDefinition } from './PanelConfigurator';
-import { slateTheme, terminalTheme } from '@a24z/industry-theme';
+import { slateTheme, terminalTheme } from '@principal-ade/industry-theme';
 import React, { useState } from 'react';
 
 const meta = {

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useRef, useState } from 'react';
 import { SnapCarousel, SnapCarouselRef } from './SnapCarousel';
-import { terminalTheme, ThemeProvider } from '@a24z/industry-theme';
+import { terminalTheme, ThemeProvider } from '@principal-ade/industry-theme';
 
 const meta = {
   title: 'Components/SnapCarousel',

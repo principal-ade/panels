@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Theme } from '@a24z/industry-theme';
+import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToTabVars } from '../utils/themeMapping';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { TabsConfig } from './PanelConfigurator';

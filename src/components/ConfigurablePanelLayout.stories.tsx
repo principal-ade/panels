@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from '@storybook/test';
 import { ConfigurablePanelLayout, PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout } from './PanelConfigurator';
-import { slateTheme, terminalTheme } from '@a24z/industry-theme';
+import { slateTheme, terminalTheme } from '@principal-ade/industry-theme';
 import React, { useState, useRef } from 'react';
 import { SnapCarousel, SnapCarouselRef } from './SnapCarousel';
 

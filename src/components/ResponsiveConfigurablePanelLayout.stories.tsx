@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { fn } from '@storybook/test';
-import { slateTheme } from '@a24z/industry-theme';
+import { slateTheme } from '@principal-ade/industry-theme';
 import { ResponsiveConfigurablePanelLayout } from './ResponsiveConfigurablePanelLayout';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout } from './PanelConfigurator';

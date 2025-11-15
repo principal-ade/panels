@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import React, { useState } from 'react';
-import { slateTheme } from '@a24z/industry-theme';
+import { slateTheme } from '@principal-ade/industry-theme';
 
 import { AnimatedResizableLayout, type AnimatedResizableLayoutProps } from './AnimatedResizableLayout';
 

@@ -19,7 +19,7 @@ export type {
 } from './types';
 
 // Theme exports
-export { type Theme } from '@a24z/industry-theme';
+export { type Theme } from '@principal-ade/industry-theme';
 export { mapThemeToPanelVars, mapThemeToTabVars } from './utils/themeMapping';
 
 export { useMediaQuery } from './hooks/useMediaQuery';

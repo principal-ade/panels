@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { PanelConfigurator, PanelDefinition, PanelLayout } from './PanelConfigurator';
-import { ThemeProvider, terminalTheme, regalTheme } from '@a24z/industry-theme';
+import { ThemeProvider, terminalTheme, regalTheme } from '@principal-ade/industry-theme';
 import React, { useState } from 'react';
 
 const meta = {
