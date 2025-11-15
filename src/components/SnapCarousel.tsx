@@ -26,7 +26,7 @@ export interface SnapCarouselProps {
   /** Minimum width for each panel (default: 350px). For 2-panel layouts, the threshold for switching to 50% width is 2x this value. */
   minPanelWidth?: number;
 
-  /** Ideal width for each panel as a fraction of viewport width (default: 1/3 = 0.333) */
+  /** Ideal width for each panel as a fraction of container width (default: 0.333 for 1/3 of container) */
   idealPanelWidth?: number;
 
   /** Whether to show a 1px separator between panels (default: false) */
@@ -43,9 +43,9 @@ export interface SnapCarouselProps {
  * SnapCarousel - A horizontally scrolling carousel with snap points
  *
  * Responsive behavior:
- * - 1 panel: 100% width
+ * - 1 panel: 100% width of container
  * - 2 panels: 100% width by default, switches to 50% when container width > 2x minPanelWidth (default: 700px)
- * - 3+ panels: 33.33% of viewport width
+ * - 3+ panels: Uses max(minPanelWidth, idealPanelWidth%) of container width
  */
 export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
   panels,
@@ -53,7 +53,7 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
   style,
   theme,
   minPanelWidth = 350,
-  idealPanelWidth = 0.333, // 1/3 of viewport
+  idealPanelWidth = 0.333, // 1/3 of container
   showSeparator = false,
   onPanelChange,
   preventKeyboardScroll = true,
@@ -192,8 +192,9 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
     // We'll use container queries in CSS for this
     panelWidth = '100%'; // Default, CSS container query will override
   } else {
-    // 3+ panels: use the minimum of minPanelWidth or idealPanelWidth
-    // But always ensure we use percentage, not viewport units
+    // 3+ panels: use the maximum of minPanelWidth or idealPanelWidth% of container
+    // This ensures panels are at least minPanelWidth wide, but can be larger if needed
+    // For full-width mobile panels, set minPanelWidth to 0
     panelWidth = `max(${minPanelWidth}px, ${idealPanelWidth * 100}%)`;
   }
 
@@ -224,7 +225,7 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
           ...themeStyles,
           ...style,
           '--snap-carousel-min-width': `${minPanelWidth}px`,
-          '--snap-carousel-ideal-width': `${idealPanelWidth * 100}vw`,
+          '--snap-carousel-ideal-width': `${idealPanelWidth * 100}%`,
           '--snap-carousel-gap': showSeparator ? '1px' : '0px',
           '--snap-carousel-panel-width': panelWidth,
           '--snap-carousel-panel-count': panelCount,

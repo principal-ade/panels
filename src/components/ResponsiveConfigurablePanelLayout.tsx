@@ -78,6 +78,8 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
       <SnapCarousel
         theme={theme}
         panels={mobilePanels}
+        minPanelWidth={0}
+        idealPanelWidth={1}
         {...mobileCarouselProps}
       />
     );

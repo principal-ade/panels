@@ -528,7 +528,7 @@ const InteractivePanelTestComponent = () => {
               <ul style={{ margin: '0.5rem 0 0 1.25rem', paddingLeft: 0 }}>
                 <li><strong>1 panel:</strong> 100% width</li>
                 <li><strong>2 panels:</strong> 100% width (50% when container &gt; {twoPanelThreshold}px)</li>
-                <li><strong>3+ panels:</strong> 33.33% of viewport width</li>
+                <li><strong>3+ panels:</strong> max(minPanelWidth, 33.33% of container)</li>
               </ul>
             </div>
           </div>
