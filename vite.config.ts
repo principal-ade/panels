@@ -3,14 +3,22 @@ import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    react(),
+    react({
+      // Force production JSX runtime to avoid jsxDEV in output
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react',
+    }),
     dts({
       insertTypesEntry: true,
       exclude: ['**/*.stories.tsx', '**/*.test.tsx'],
     }),
   ],
+  define: {
+    // Ensure NODE_ENV is production for React
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
@@ -44,4 +52,6 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-});
+  // Force production mode for consistent JSX runtime
+  mode: 'production',
+}));
