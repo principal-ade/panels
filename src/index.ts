@@ -1,6 +1,5 @@
 export { AnimatedResizableLayout, type AnimatedResizableLayoutProps } from './components/AnimatedResizableLayout';
 export { AnimatedVerticalLayout, type AnimatedVerticalLayoutProps } from './components/AnimatedVerticalLayout';
-export { ThreePanelLayout, type ThreePanelLayoutProps } from './components/ThreePanelLayout';
 export { ConfigurablePanelLayout, type ConfigurablePanelLayoutProps, type PanelDefinitionWithContent } from './components/ConfigurablePanelLayout';
 export { ResponsiveConfigurablePanelLayout, type ResponsiveConfigurablePanelLayoutProps } from './components/ResponsiveConfigurablePanelLayout';
 export { EditableConfigurablePanelLayout, type EditableConfigurablePanelLayoutProps } from './components/EditableConfigurablePanelLayout';
@@ -23,4 +22,3 @@ export { type Theme } from '@principal-ade/industry-theme';
 export { mapThemeToPanelVars, mapThemeToTabVars } from './utils/themeMapping';
 
 export { useMediaQuery } from './hooks/useMediaQuery';
-export { useLocalStorage } from './hooks/useLocalStorage';
