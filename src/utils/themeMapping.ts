@@ -35,5 +35,8 @@ export function mapThemeToTabVars(theme: Theme): Record<string, string> {
     '--tab-focus': theme.colors.primary,
     '--tab-content-bg': theme.colors.background,
     '--tab-empty-text': theme.colors.textMuted,
+    '--tab-font-family': theme.fonts.body,
+    '--tab-font-size': `${theme.fontSizes[1]}px`,
+    '--tab-font-weight': String(theme.fontWeights.medium),
   };
 }

@@ -78,8 +78,9 @@
   border-radius: 0;
   padding: 8px 16px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  font-family: var(--tab-font-family, inherit);
+  font-size: var(--tab-font-size, 14px);
+  font-weight: var(--tab-font-weight, 500);
   color: var(--tab-text, #333);
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -143,8 +144,8 @@
   display: none;
 }
 
-/* Show label and hide icon when button is 250px or wider */
-@container (min-width: 250px) {
+/* Show label and hide icon when button is 100px or wider */
+@container (min-width: 100px) {
   .tab-label {
     display: inline;
   }
