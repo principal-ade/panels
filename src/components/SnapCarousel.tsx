@@ -37,6 +37,9 @@ export interface SnapCarouselProps {
 
   /** Prevent keyboard keys (space, arrows, page up/down) from scrolling the carousel. Useful when panels contain interactive input components like terminals or text editors. (default: true) */
   preventKeyboardScroll?: boolean;
+
+  /** Disable touch/swipe scrolling, only allow programmatic navigation via ref (default: false) */
+  disableSwipe?: boolean;
 }
 
 /**
@@ -57,6 +60,7 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
   showSeparator = false,
   onPanelChange,
   preventKeyboardScroll = true,
+  disableSwipe = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -220,7 +224,7 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
       )}
       <div
         ref={containerRef}
-        className={`snap-carousel-container ${className}`}
+        className={`snap-carousel-container ${disableSwipe ? 'swipe-disabled' : ''} ${className}`}
         style={{
           ...themeStyles,
           ...style,

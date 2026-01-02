@@ -30,6 +30,12 @@
   display: none;
 }
 
+/* Disable touch/swipe scrolling when controlled by external navigation */
+.snap-carousel-container.swipe-disabled {
+  touch-action: pan-y pinch-zoom;
+  overscroll-behavior-x: none;
+}
+
 .snap-carousel-panel {
   flex: 0 0 auto;
   scroll-snap-align: start;

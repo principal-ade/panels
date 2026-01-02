@@ -1,0 +1,61 @@
+/* Mobile Tab Navigation for ResponsiveConfigurablePanelLayout */
+
+.mobile-tab-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.mobile-tab-content {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.mobile-tab-nav {
+  display: flex;
+  background: var(--tab-list-bg, #f5f5f5);
+  border-top: 1px solid var(--tab-border, #ddd);
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-tab-button {
+  flex: 1;
+  background: var(--tab-bg, #fff);
+  border: none;
+  border-left: 1px solid var(--tab-border, #ddd);
+  padding: 12px 8px;
+  cursor: pointer;
+  font-family: var(--tab-font-family, inherit);
+  font-size: var(--tab-font-size, 14px);
+  font-weight: var(--tab-font-weight, 500);
+  color: var(--tab-text, #333);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mobile-tab-button:first-child {
+  border-left: none;
+}
+
+.mobile-tab-button:hover {
+  background: var(--tab-bg-hover, #f9f9f9);
+}
+
+.mobile-tab-button.active {
+  background: var(--tab-bg-active, #007bff);
+  color: var(--tab-text-active, #fff);
+}
+
+.mobile-tab-button:focus-visible {
+  outline: 2px solid var(--tab-focus, #007bff);
+  outline-offset: -2px;
+  z-index: 1;
+}
