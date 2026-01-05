@@ -17,13 +17,21 @@ export interface ResponsiveConfigurablePanelLayoutProps extends ConfigurablePane
   /**
    * Additional props passed to the SnapCarousel when the mobile layout is active.
    * The `panels` and `theme` props are managed by this component.
+   * Note: `onPanelChange` is merged with internal handler - use it to get notified of panel changes.
    */
   mobileCarouselProps?: Omit<SnapCarouselProps, 'panels' | 'theme'>;
+
+  /**
+   * Callback fired when the active panel changes in mobile view.
+   * Receives the panel index (0=left, 1=middle, 2=right) and the slot name.
+   */
+  onMobilePanelChange?: (index: number, slot: 'left' | 'middle' | 'right') => void;
 }
 
 interface MobileSlotInfo {
   content: ReactNode;
   label: string;
+  slot: 'left' | 'middle' | 'right';
 }
 
 /**
@@ -33,6 +41,7 @@ interface MobileSlotInfo {
 export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurablePanelLayoutProps> = ({
   mobileBreakpoint = '(max-width: 768px)',
   mobileCarouselProps,
+  onMobilePanelChange,
   theme,
   layout,
   panels,
@@ -43,6 +52,8 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
   const [activeTabIndex, setActiveTabIndex] = useState(0);
 
   const orderedSlots: (PanelSlot | undefined)[] = useMemo(() => [layout?.left, layout?.middle, layout?.right], [layout]);
+
+  const slotNames: ('left' | 'middle' | 'right')[] = ['left', 'middle', 'right'];
 
   const mobileSlots = useMemo(() => {
     const getPanelContent = (panelId: string | null): ReactNode => {
@@ -56,7 +67,7 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
       return panel?.label ?? panelId;
     };
 
-    const processSlot = (slot: PanelSlot | undefined): MobileSlotInfo | null => {
+    const processSlot = (slot: PanelSlot | undefined, slotName: 'left' | 'middle' | 'right'): MobileSlotInfo | null => {
       if (slot === null || slot === undefined) return null;
 
       if (typeof slot === 'object' && 'type' in slot) {
@@ -74,6 +85,7 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
               />
             ),
             label: firstPanelLabel,
+            slot: slotName,
           };
         }
         // Future group types (e.g., tiles) can be added here
@@ -84,22 +96,38 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
       return {
         content: getPanelContent(slot),
         label: getPanelLabel(slot),
+        slot: slotName,
       };
     };
 
     return orderedSlots
-      .map(processSlot)
+      .map((slot, index) => processSlot(slot, slotNames[index]))
       .filter((info): info is MobileSlotInfo => info !== null);
   }, [orderedSlots, panels, theme]);
 
   const handleTabClick = (index: number) => {
     setActiveTabIndex(index);
     carouselRef.current?.scrollToPanel(index);
+    // Notify consumer of panel change
+    const slot = mobileSlots[index]?.slot;
+    if (slot) {
+      onMobilePanelChange?.(index, slot);
+    }
   };
 
   const handlePanelChange = (index: number) => {
     setActiveTabIndex(index);
+    // Also call user's onPanelChange if provided via mobileCarouselProps
+    mobileCarouselProps?.onPanelChange?.(index);
+    // Notify consumer via the dedicated callback
+    const slot = mobileSlots[index]?.slot;
+    if (slot) {
+      onMobilePanelChange?.(index, slot);
+    }
   };
+
+  // Extract onPanelChange from mobileCarouselProps so we don't override internal handler
+  const { onPanelChange: _userOnPanelChange, ...restCarouselProps } = mobileCarouselProps ?? {};
 
   // Apply theme as CSS variables for tabs
   const themeStyles = mapThemeToTabVars(theme) as React.CSSProperties;
@@ -122,7 +150,7 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
             idealPanelWidth={1}
             disableSwipe={true}
             onPanelChange={handlePanelChange}
-            {...mobileCarouselProps}
+            {...restCarouselProps}
           />
         </div>
         <nav className="mobile-tab-nav" role="tablist">
