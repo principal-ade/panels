@@ -63,6 +63,8 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
   disableSwipe = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Apply theme as CSS variables
   const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
@@ -76,6 +78,14 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
       const targetPanel = container.children[index] as HTMLElement;
 
       if (targetPanel) {
+        // Mark as programmatic scroll to prevent onPanelChange during animation
+        isProgrammaticScrollRef.current = true;
+
+        // Clear any existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+
         // Calculate the scroll position directly instead of using scrollIntoView
         // This prevents scrolling ancestor containers
         const scrollLeft = targetPanel.offsetLeft;
@@ -83,6 +93,11 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
           left: scrollLeft,
           behavior: 'smooth',
         });
+
+        // Reset flag after smooth scroll animation completes (~300-500ms)
+        scrollTimeoutRef.current = setTimeout(() => {
+          isProgrammaticScrollRef.current = false;
+        }, 500);
       }
     },
     getCurrentPanel: () => {
@@ -118,6 +133,10 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
   // Handle scroll to track which panel is in view
   const handleScroll = (_e: React.UIEvent<HTMLDivElement>) => {
     if (!onPanelChange || !containerRef.current || containerRef.current.children.length === 0) return;
+
+    // Skip onPanelChange callback during programmatic scrolls (e.g., tab clicks)
+    // to prevent tab highlighting from flickering during smooth scroll animation
+    if (isProgrammaticScrollRef.current) return;
 
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
@@ -180,6 +199,15 @@ export const SnapCarousel = forwardRef<SnapCarouselRef, SnapCarouselProps>(({
       container.removeEventListener('keydown', handleKeyDown);
     };
   }, [preventKeyboardScroll]);
+
+  // Cleanup scroll timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Calculate panel count for responsive sizing
   const panelCount = panels.length;
