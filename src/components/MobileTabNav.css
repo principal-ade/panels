@@ -25,34 +25,55 @@
 
 .mobile-tab-button {
   flex: 1;
-  background: var(--tab-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
   border: none;
-  border-left: 1px solid var(--tab-border, #ddd);
-  padding: 14px 8px;
-  padding-bottom: calc(16px + min(12px, env(safe-area-inset-bottom, 0px)));
+  padding: 6px 4px;
+  padding-bottom: calc(6px + min(12px, env(safe-area-inset-bottom, 0px)));
   cursor: pointer;
   font-family: var(--tab-font-family, inherit);
-  font-size: var(--tab-font-size, 14px);
+  font-size: var(--tab-font-size, 11px);
   font-weight: var(--tab-font-weight, 500);
-  color: var(--tab-text, #333);
-  transition: background-color 0.2s ease, color 0.2s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--tab-text, #666);
+  transition: color 0.2s ease;
   min-width: 0;
 }
 
-.mobile-tab-button:first-child {
-  border-left: none;
-}
-
 .mobile-tab-button:hover {
-  background: var(--tab-bg-hover, #f9f9f9);
+  color: var(--tab-text-hover, #333);
 }
 
 .mobile-tab-button.active {
-  background: var(--tab-bg-active, #007bff);
-  color: var(--tab-text-active, #fff);
+  color: var(--tab-text-active, #007bff);
+}
+
+.mobile-tab-button .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--tab-icon-color, #999);
+  transition: color 0.2s ease;
+}
+
+.mobile-tab-button.active .tab-icon {
+  color: var(--tab-icon-active, #007bff);
+}
+
+.mobile-tab-button .tab-label {
+  display: block;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+  color: inherit;
+  opacity: 1;
 }
 
 .mobile-tab-button:focus-visible {

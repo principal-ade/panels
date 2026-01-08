@@ -31,6 +31,7 @@ export interface ResponsiveConfigurablePanelLayoutProps extends ConfigurablePane
 interface MobileSlotInfo {
   content: ReactNode;
   label: string;
+  icon: ReactNode;
   slot: 'left' | 'middle' | 'right';
 }
 
@@ -67,14 +68,21 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
       return panel?.label ?? panelId;
     };
 
+    const getPanelIcon = (panelId: string): ReactNode => {
+      const panel = panels.find(p => p.id === panelId);
+      return panel?.icon ?? null;
+    };
+
     const processSlot = (slot: PanelSlot | undefined, slotName: 'left' | 'middle' | 'right'): MobileSlotInfo | null => {
       if (slot === null || slot === undefined) return null;
 
       if (typeof slot === 'object' && 'type' in slot) {
         const group = slot as PanelGroupType;
         if (group.type === 'tabs') {
-          // For tab groups, use the first panel's label as the slot label
-          const firstPanelLabel = group.panels.length > 0 ? getPanelLabel(group.panels[0]) : 'Tab Group';
+          // For tab groups, use the first panel's label and icon as the slot label/icon
+          const firstPanelId = group.panels[0];
+          const firstPanelLabel = group.panels.length > 0 ? getPanelLabel(firstPanelId) : 'Tab Group';
+          const firstPanelIcon = group.panels.length > 0 ? getPanelIcon(firstPanelId) : null;
           return {
             content: (
               <TabGroup
@@ -85,6 +93,7 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
               />
             ),
             label: firstPanelLabel,
+            icon: firstPanelIcon,
             slot: slotName,
           };
         }
@@ -96,6 +105,7 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
       return {
         content: getPanelContent(slot),
         label: getPanelLabel(slot),
+        icon: getPanelIcon(slot),
         slot: slotName,
       };
     };
@@ -162,7 +172,8 @@ export const ResponsiveConfigurablePanelLayout: React.FC<ResponsiveConfigurableP
               className={`mobile-tab-button ${index === activeTabIndex ? 'active' : ''}`}
               onClick={() => handleTabClick(index)}
             >
-              {slot.label}
+              {slot.icon && <span className="tab-icon">{slot.icon}</span>}
+              <span className="tab-label">{slot.label}</span>
             </button>
           ))}
         </nav>

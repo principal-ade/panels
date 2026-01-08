@@ -29,6 +29,11 @@ const samplePanels: PanelDefinitionWithContent[] = [
   {
     id: 'nav',
     label: 'Navigation',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+      </svg>
+    ),
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Navigation</h3>
@@ -43,7 +48,12 @@ const samplePanels: PanelDefinitionWithContent[] = [
   },
   {
     id: 'main',
-    label: 'Main Content',
+    label: 'Main',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+      </svg>
+    ),
     content: (
       <div style={{ padding: '20px' }}>
         <h2>Primary Canvas</h2>
@@ -53,7 +63,12 @@ const samplePanels: PanelDefinitionWithContent[] = [
   },
   {
     id: 'sidebar',
-    label: 'Sidebar',
+    label: 'Insights',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
+      </svg>
+    ),
     content: (
       <div style={{ padding: '20px' }}>
         <h3>Insights</h3>
@@ -111,6 +126,11 @@ const MobilePanelChangeDemo = () => {
     {
       id: 'nav',
       label: 'Navigation',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </svg>
+      ),
       content: (
         <div style={{ padding: '20px', background: '#1a1a2e', height: '100%' }}>
           <h3 style={{ color: '#fff' }}>Navigation (Left)</h3>
@@ -121,6 +141,11 @@ const MobilePanelChangeDemo = () => {
     {
       id: 'main',
       label: 'Main',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+        </svg>
+      ),
       content: (
         <div style={{ padding: '20px', background: '#16213e', height: '100%' }}>
           <h3 style={{ color: '#fff' }}>Main Content (Middle)</h3>
@@ -130,7 +155,12 @@ const MobilePanelChangeDemo = () => {
     },
     {
       id: 'sidebar',
-      label: 'Sidebar',
+      label: 'Insights',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
+        </svg>
+      ),
       content: (
         <div style={{ padding: '20px', background: '#1a2e1a', height: '100%' }}>
           <h3 style={{ color: '#fff' }}>Sidebar (Right)</h3>

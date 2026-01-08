@@ -167,13 +167,13 @@ const ConsolePanel = () => (
 
 // Panels with content for rendering
 const panelsWithContent: PanelDefinitionWithContent[] = [
-  { id: 'nav', label: 'Navigation', content: <NavigationPanel /> },
-  { id: 'editor', label: 'Editor', content: <EditorPanel /> },
-  { id: 'terminal', label: 'Terminal', content: <TerminalPanel /> },
-  { id: 'preview', label: 'Preview', content: <PreviewPanel /> },
-  { id: 'debugger', label: 'Debugger', content: <DebuggerPanel /> },
-  { id: 'properties', label: 'Properties', content: <PropertiesPanel /> },
-  { id: 'console', label: 'Console', content: <ConsolePanel /> },
+  { id: 'nav', label: 'Navigation', icon: <span>📁</span>, content: <NavigationPanel /> },
+  { id: 'editor', label: 'Editor', icon: <span>✏️</span>, content: <EditorPanel /> },
+  { id: 'terminal', label: 'Terminal', icon: <span>⌨️</span>, content: <TerminalPanel /> },
+  { id: 'preview', label: 'Preview', icon: <span>👁️</span>, content: <PreviewPanel /> },
+  { id: 'debugger', label: 'Debugger', icon: <span>🐛</span>, content: <DebuggerPanel /> },
+  { id: 'properties', label: 'Properties', icon: <span>⚙️</span>, content: <PropertiesPanel /> },
+  { id: 'console', label: 'Console', icon: <span>💬</span>, content: <ConsolePanel /> },
 ];
 
 // Basic story - not in edit mode
