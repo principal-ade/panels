@@ -30,9 +30,9 @@ export function mapThemeToTabVars(theme: Theme): Record<string, string> {
     '--tab-bg-active': theme.colors.primary,
     '--tab-text': theme.colors.textSecondary,
     '--tab-text-hover': theme.colors.text,
-    '--tab-text-active': theme.colors.primary,
+    '--tab-text-active': theme.colors.background,
     '--tab-icon-color': theme.colors.textTertiary,
-    '--tab-icon-active': theme.colors.primary,
+    '--tab-icon-active': theme.colors.background,
     '--tab-border-hover': theme.colors.textSecondary,
     '--tab-border-active': theme.colors.primary,
     '--tab-focus': theme.colors.primary,
@@ -41,5 +41,8 @@ export function mapThemeToTabVars(theme: Theme): Record<string, string> {
     '--tab-font-family': theme.fonts.body,
     '--tab-font-size': '11px',
     '--tab-font-weight': String(theme.fontWeights.medium),
+    // Mobile-specific variables (transparent background, so text/icons are primary colored)
+    '--mobile-tab-text-active': theme.colors.primary,
+    '--mobile-tab-icon-active': theme.colors.primary,
   };
 }

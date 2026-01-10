@@ -29,11 +29,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
   background: transparent;
   border: none;
-  padding: 6px 4px;
-  padding-bottom: calc(6px + min(12px, env(safe-area-inset-bottom, 0px)));
+  padding: 14px 4px;
+  padding-bottom: calc(14px + min(12px, env(safe-area-inset-bottom, 0px)));
   cursor: pointer;
   font-family: var(--tab-font-family, inherit);
   font-size: var(--tab-font-size, 11px);
@@ -48,7 +48,7 @@
 }
 
 .mobile-tab-button.active {
-  color: var(--tab-text-active, #007bff);
+  color: var(--mobile-tab-text-active, #007bff);
 }
 
 .mobile-tab-button .tab-icon {
@@ -61,7 +61,7 @@
 }
 
 .mobile-tab-button.active .tab-icon {
-  color: var(--tab-icon-active, #007bff);
+  color: var(--mobile-tab-icon-active, #007bff);
 }
 
 .mobile-tab-button .tab-label {
