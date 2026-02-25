@@ -32,7 +32,8 @@ export default defineConfig(({ mode }) => ({
         'react-dom',
         'react/jsx-runtime',
         'react/jsx-dev-runtime',
-        'react-resizable-panels'
+        'react-resizable-panels',
+        '@principal-ade/industry-theme',
       ],
       output: {
         globals: {
@@ -41,6 +42,7 @@ export default defineConfig(({ mode }) => ({
           'react/jsx-runtime': 'react/jsx-runtime',
           'react/jsx-dev-runtime': 'react/jsx-dev-runtime',
           'react-resizable-panels': 'ReactResizablePanels',
+          '@principal-ade/industry-theme': 'IndustryTheme',
         },
       },
     },
