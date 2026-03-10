@@ -11,6 +11,7 @@ import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToPanelVars } from '../utils/themeMapping';
 import { PanelLayout, PanelSlot, PanelGroup as PanelGroupType, TabsConfig } from './PanelConfigurator';
 import { TabGroup } from './TabGroup';
+import { PanelBoundsProvider } from '../hooks/usePanelBounds';
 import './ConfigurablePanelLayout.css';
 
 export interface PanelDefinitionWithContent {
@@ -1029,7 +1030,9 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
                 : 'none',
             }}
           >
-            {leftPanel}
+            <PanelBoundsProvider slot="left">
+              {leftPanel}
+            </PanelBoundsProvider>
           </div>
         </Panel>
 
@@ -1076,7 +1079,9 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
                 : 'none',
             }}
           >
-            {middlePanel}
+            <PanelBoundsProvider slot="middle">
+              {middlePanel}
+            </PanelBoundsProvider>
           </div>
         </Panel>
 
@@ -1123,7 +1128,9 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
                 : 'none',
             }}
           >
-            {rightPanel}
+            <PanelBoundsProvider slot="right">
+              {rightPanel}
+            </PanelBoundsProvider>
           </div>
         </Panel>
       </PanelGroup>

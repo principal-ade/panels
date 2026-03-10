@@ -15,6 +15,10 @@ export type {
   AnimationConfig,
   CollapseButtonConfig,
   PanelCallbacks,
+  // Panel bounds types
+  PanelSlotPosition,
+  PanelBounds,
+  PanelBoundsContextValue,
 } from './types';
 
 // Theme exports
@@ -22,3 +26,12 @@ export { type Theme } from '@principal-ade/industry-theme';
 export { mapThemeToPanelVars, mapThemeToTabVars } from './utils/themeMapping';
 
 export { useMediaQuery } from './hooks/useMediaQuery';
+
+// Panel bounds hooks for viewport-relative positioning
+export {
+  PanelBoundsProvider,
+  usePanelBounds,
+  usePanelOffset,
+  type PanelBoundsProviderProps,
+  type UsePanelBoundsReturn,
+} from './hooks/usePanelBounds';
