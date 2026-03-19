@@ -1,5 +1,6 @@
 export { AnimatedResizableLayout, type AnimatedResizableLayoutProps } from './components/AnimatedResizableLayout';
 export { AnimatedVerticalLayout, type AnimatedVerticalLayoutProps } from './components/AnimatedVerticalLayout';
+export { CollapsibleSplitPane, type CollapsibleSplitPaneProps, type CollapsedHeaderConfig } from './components/CollapsibleSplitPane';
 export { ConfigurablePanelLayout, type ConfigurablePanelLayoutProps, type PanelDefinitionWithContent } from './components/ConfigurablePanelLayout';
 export { ResponsiveConfigurablePanelLayout, type ResponsiveConfigurablePanelLayoutProps } from './components/ResponsiveConfigurablePanelLayout';
 export { EditableConfigurablePanelLayout, type EditableConfigurablePanelLayoutProps } from './components/EditableConfigurablePanelLayout';
