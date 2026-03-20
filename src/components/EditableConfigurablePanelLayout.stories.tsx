@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import { EditableConfigurablePanelLayout } from './EditableConfigurablePanelLayout';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout, PanelDefinition } from './PanelConfigurator';
@@ -14,6 +14,19 @@ const meta = {
   },
   args: {
     onLayoutChange: fn(),
+    onPanelResize: fn(),
+    onLeftCollapseStart: fn(),
+    onLeftCollapseComplete: fn(),
+    onLeftExpandStart: fn(),
+    onLeftExpandComplete: fn(),
+    onMiddleCollapseStart: fn(),
+    onMiddleCollapseComplete: fn(),
+    onMiddleExpandStart: fn(),
+    onMiddleExpandComplete: fn(),
+    onRightCollapseStart: fn(),
+    onRightCollapseComplete: fn(),
+    onRightExpandStart: fn(),
+    onRightExpandComplete: fn(),
   },
   decorators: [
     (Story) => (

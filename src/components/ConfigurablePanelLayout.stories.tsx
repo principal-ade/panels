@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import { ConfigurablePanelLayout, PanelDefinitionWithContent } from './ConfigurablePanelLayout';
 import { PanelLayout } from './PanelConfigurator';
 import { slateTheme, terminalTheme } from '@principal-ade/industry-theme';

@@ -1,4 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react-webpack5';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import React, { useState } from 'react';
 import { slateTheme } from '@principal-ade/industry-theme';
 
@@ -11,6 +12,12 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
+  args: {
+    onCollapseStart: fn(),
+    onCollapseComplete: fn(),
+    onExpandStart: fn(),
+    onExpandComplete: fn(),
+  },
   argTypes: {
     collapsibleSide: {
       control: 'radio',

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import { useRef, useState } from 'react';
-import { SnapCarousel, SnapCarouselRef } from './SnapCarousel';
+import { SnapCarousel, SnapCarouselRef, SnapCarouselProps } from './SnapCarousel';
 import { terminalTheme, ThemeProvider } from '@principal-ade/industry-theme';
 
 const meta = {
@@ -10,6 +11,9 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
+  args: {
+    onPanelChange: fn(),
+  },
   argTypes: {
     minPanelWidth: {
       control: { type: 'number', min: 200, max: 800, step: 50 },
@@ -160,9 +164,6 @@ export const WithCallbacks: Story = {
     minPanelWidth: 500,
     idealPanelWidth: 0.333,
     showSeparator: false,
-    onPanelChange: (index: number) => {
-      console.log('Current panel:', index);
-    },
   },
   decorators: [
     (Story) => (

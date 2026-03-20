@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { fn } from '@storybook/test';
+import { fn } from 'storybook/test';
 import { slateTheme } from '@principal-ade/industry-theme';
 import { ResponsiveConfigurablePanelLayout } from './ResponsiveConfigurablePanelLayout';
 import { PanelDefinitionWithContent } from './ConfigurablePanelLayout';
@@ -11,6 +11,22 @@ const meta = {
   component: ResponsiveConfigurablePanelLayout,
   parameters: {
     layout: 'fullscreen',
+  },
+  args: {
+    onPanelResize: fn(),
+    onMobilePanelChange: fn(),
+    onLeftCollapseStart: fn(),
+    onLeftCollapseComplete: fn(),
+    onLeftExpandStart: fn(),
+    onLeftExpandComplete: fn(),
+    onMiddleCollapseStart: fn(),
+    onMiddleCollapseComplete: fn(),
+    onMiddleExpandStart: fn(),
+    onMiddleExpandComplete: fn(),
+    onRightCollapseStart: fn(),
+    onRightCollapseComplete: fn(),
+    onRightExpandStart: fn(),
+    onRightExpandComplete: fn(),
   },
   decorators: [
     (Story) => (
@@ -95,7 +111,6 @@ export const DesktopExperience: Story = {
     mobileCarouselProps: {
       showSeparator: true,
     },
-    onPanelResize: fn(),
   },
 };
 
