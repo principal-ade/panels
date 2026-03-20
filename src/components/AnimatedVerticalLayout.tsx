@@ -1,9 +1,10 @@
 import React, { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import {
   Panel,
-  PanelGroup,
-  PanelResizeHandle,
-  ImperativePanelHandle,
+  Group,
+  Separator,
+  PanelImperativeHandle,
+  PanelSize,
 } from 'react-resizable-panels';
 import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToPanelVars } from '../utils/themeMapping';
@@ -101,7 +102,7 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
   const [isTopCollapsed, setIsTopCollapsed] = useState(collapsed.top || false);
   const [isTopAnimating, setIsTopAnimating] = useState(false);
   const [currentTopSize, setCurrentTopSize] = useState(collapsed.top ? 0 : defaultSizes.top);
-  const topPanelRef = useRef<ImperativePanelHandle>(null);
+  const topPanelRef = useRef<PanelImperativeHandle>(null);
   const topAnimationFrameRef = useRef<number | undefined>(undefined);
   const topStartTimeRef = useRef<number | undefined>(undefined);
 
@@ -109,7 +110,7 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
   const [isBottomCollapsed, setIsBottomCollapsed] = useState(collapsed.bottom || false);
   const [isBottomAnimating, setIsBottomAnimating] = useState(false);
   const [currentBottomSize, setCurrentBottomSize] = useState(collapsed.bottom ? 0 : defaultSizes.bottom);
-  const bottomPanelRef = useRef<ImperativePanelHandle>(null);
+  const bottomPanelRef = useRef<PanelImperativeHandle>(null);
   const bottomAnimationFrameRef = useRef<number | undefined>(undefined);
   const bottomStartTimeRef = useRef<number | undefined>(undefined);
 
@@ -272,8 +273,9 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
   }, [isBottomCollapsed, handleBottomCollapse, handleBottomExpand]);
 
   const handleTopResize = useCallback(
-    (size: number) => {
+    (panelSize: PanelSize) => {
       if (!isTopAnimating) {
+        const size = panelSize.asPercentage;
         setCurrentTopSize(size);
         if (size > 0) {
           setIsTopCollapsed(false);
@@ -284,8 +286,9 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
   );
 
   const handleBottomResize = useCallback(
-    (size: number) => {
+    (panelSize: PanelSize) => {
       if (!isBottomAnimating) {
+        const size = panelSize.asPercentage;
         setCurrentBottomSize(size);
         if (size > 0) {
           setIsBottomCollapsed(false);
@@ -296,8 +299,10 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
   );
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
-  }, []);
+    if (!isTopAnimating && !isBottomAnimating) {
+      setIsDragging(true);
+    }
+  }, [isTopAnimating, isBottomAnimating]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
@@ -382,16 +387,14 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
 
   return (
     <div className={`animated-vertical-layout ${className}`} style={{ ...themeStyles, ...style }}>
-      <PanelGroup direction="vertical" onLayout={handleDragEnd}>
+      <Group orientation="vertical" onLayoutChange={handleDragStart} onLayoutChanged={handleDragEnd}>
         <Panel
-          ref={topPanelRef}
+          panelRef={topPanelRef}
           collapsible={collapsiblePanels.top}
-          defaultSize={collapsed.top ? 0 : defaultSizes.top}
-          minSize={minSizes.top}
-          collapsedSize={0}
+          defaultSize={collapsed.top ? '0%' : `${defaultSizes.top}%`}
+          minSize={`${minSizes.top}%`}
+          collapsedSize="0%"
           onResize={handleTopResize}
-          onCollapse={() => setIsTopCollapsed(true)}
-          onExpand={() => setIsTopCollapsed(false)}
           className={getTopPanelClassName()}
           style={topPanelStyle}
         >
@@ -408,10 +411,7 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
           </div>
         </Panel>
 
-        <PanelResizeHandle
-          className="vertical-resize-handle"
-          onDragging={handleDragStart}
-        >
+        <Separator className="vertical-resize-handle">
           {showCollapseButtons && (
             <div className="handle-bar">
               {collapsiblePanels.top && (
@@ -436,17 +436,15 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
               )}
             </div>
           )}
-        </PanelResizeHandle>
+        </Separator>
 
         <Panel
-          ref={bottomPanelRef}
+          panelRef={bottomPanelRef}
           collapsible={collapsiblePanels.bottom}
-          defaultSize={collapsed.bottom ? 0 : defaultSizes.bottom}
-          minSize={minSizes.bottom}
-          collapsedSize={0}
+          defaultSize={collapsed.bottom ? '0%' : `${defaultSizes.bottom}%`}
+          minSize={`${minSizes.bottom}%`}
+          collapsedSize="0%"
           onResize={handleBottomResize}
-          onCollapse={() => setIsBottomCollapsed(true)}
-          onExpand={() => setIsBottomCollapsed(false)}
           className={getBottomPanelClassName()}
           style={bottomPanelStyle}
         >
@@ -462,7 +460,7 @@ export const AnimatedVerticalLayout: React.FC<AnimatedVerticalLayoutProps> = ({
             {bottomPanel}
           </div>
         </Panel>
-      </PanelGroup>
+      </Group>
     </div>
   );
 };

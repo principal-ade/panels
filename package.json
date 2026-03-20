@@ -48,7 +48,7 @@
     "@principal-ade/industry-theme": "^0.1.8",
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
-    "react-resizable-panels": "^3.0.0"
+    "react-resizable-panels": "^4.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
@@ -74,7 +74,7 @@
     "lucide-react": "^0.548.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-resizable-panels": "^3.0.6",
+    "react-resizable-panels": "^4.7.3",
     "storybook": "^10.3.0",
     "terser": "^5.46.1",
     "typescript": "^5.9.3",

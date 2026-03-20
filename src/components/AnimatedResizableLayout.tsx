@@ -1,9 +1,10 @@
 import React, { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import {
   Panel,
-  PanelGroup,
-  PanelResizeHandle,
-  ImperativePanelHandle,
+  Group,
+  Separator,
+  PanelImperativeHandle,
+  PanelSize,
 } from 'react-resizable-panels';
 import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToPanelVars } from '../utils/themeMapping';
@@ -86,7 +87,7 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
   const [isDragging, setIsDragging] = useState(false);
   const [hideHandle, setHideHandle] = useState(collapsed);
   const [currentSize, setCurrentSize] = useState(collapsed ? 0 : defaultSize);
-  const panelRef = useRef<ImperativePanelHandle>(null);
+  const panelRef = useRef<PanelImperativeHandle>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number | undefined>(undefined);
   const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -177,8 +178,9 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
   }, [isCollapsed, handleCollapse, handleExpand]);
 
   const handleResize = useCallback(
-    (size: number) => {
+    (panelSize: PanelSize) => {
       if (!isAnimating) {
+        const size = panelSize.asPercentage;
         setCurrentSize(size);
         // If manually resized to non-zero, ensure we're not in collapsed state
         if (size > 0) {
@@ -190,8 +192,10 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
   );
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
-  }, []);
+    if (!isAnimating) {
+      setIsDragging(true);
+    }
+  }, [isAnimating]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
@@ -258,16 +262,14 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
 
   return (
     <div className={`animated-resizable-layout ${className}`} style={{ ...themeStyles, ...style }}>
-      <PanelGroup direction="horizontal" onLayout={handleDragEnd}>
+      <Group orientation="horizontal" onLayoutChange={handleDragStart} onLayoutChanged={handleDragEnd}>
         <Panel
-          ref={leftIsCollapsible ? panelRef : undefined}
+          panelRef={leftIsCollapsible ? panelRef : undefined}
           collapsible={leftIsCollapsible}
-          defaultSize={leftIsCollapsible ? (collapsed ? 0 : defaultSize) : undefined}
-          minSize={leftIsCollapsible ? minSize : 30}
-          collapsedSize={0}
+          defaultSize={leftIsCollapsible ? (collapsed ? '0%' : `${defaultSize}%`) : undefined}
+          minSize={leftIsCollapsible ? `${minSize}%` : '30%'}
+          collapsedSize="0%"
           onResize={leftIsCollapsible ? handleResize : undefined}
-          onCollapse={leftIsCollapsible ? () => setIsCollapsed(true) : undefined}
-          onExpand={leftIsCollapsible ? () => setIsCollapsed(false) : undefined}
           className={getPanelClassName(leftIsCollapsible)}
           style={leftIsCollapsible ? collapsiblePanelStyle : undefined}
         >
@@ -284,9 +286,8 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
           </div>
         </Panel>
 
-        <PanelResizeHandle
+        <Separator
           className={`resize-handle ${hideHandle ? 'collapsed' : ''}`}
-          onDragging={handleDragStart}
           style={hideHandle ? { visibility: 'hidden', width: 0 } : undefined}
         >
           {showCollapseButton && (
@@ -301,17 +302,15 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
               </button>
             </div>
           )}
-        </PanelResizeHandle>
+        </Separator>
 
         <Panel
-          ref={!leftIsCollapsible ? panelRef : undefined}
+          panelRef={!leftIsCollapsible ? panelRef : undefined}
           collapsible={!leftIsCollapsible}
-          defaultSize={!leftIsCollapsible ? (collapsed ? 0 : defaultSize) : undefined}
-          minSize={!leftIsCollapsible ? minSize : 30}
-          collapsedSize={0}
+          defaultSize={!leftIsCollapsible ? (collapsed ? '0%' : `${defaultSize}%`) : undefined}
+          minSize={!leftIsCollapsible ? `${minSize}%` : '30%'}
+          collapsedSize="0%"
           onResize={!leftIsCollapsible ? handleResize : undefined}
-          onCollapse={!leftIsCollapsible ? () => setIsCollapsed(true) : undefined}
-          onExpand={!leftIsCollapsible ? () => setIsCollapsed(false) : undefined}
           className={getPanelClassName(!leftIsCollapsible)}
           style={!leftIsCollapsible ? collapsiblePanelStyle : undefined}
         >
@@ -327,7 +326,7 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
             {rightPanel}
           </div>
         </Panel>
-      </PanelGroup>
+      </Group>
     </div>
   );
 };

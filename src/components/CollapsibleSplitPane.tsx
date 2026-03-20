@@ -7,9 +7,10 @@ import React, {
 } from 'react';
 import {
   Panel,
-  PanelGroup,
-  PanelResizeHandle,
-  ImperativePanelHandle,
+  Group,
+  Separator,
+  PanelImperativeHandle,
+  PanelSize,
 } from 'react-resizable-panels';
 import { Theme } from '@principal-ade/industry-theme';
 import { mapThemeToPanelVars } from '../utils/themeMapping';
@@ -187,7 +188,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const secondaryPanelRef = useRef<ImperativePanelHandle>(null);
+  const secondaryPanelRef = useRef<PanelImperativeHandle>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number | undefined>(undefined);
   const lastExpandedRatioRef = useRef(ratio);
@@ -301,9 +302,9 @@ const CollapsibleSplitPaneWithContent: React.FC<
   }, [collapsed, handleCollapse, handleExpand]);
 
   const handleSecondaryResize = useCallback(
-    (size: number) => {
+    (panelSize: PanelSize) => {
       if (!isAnimating && !collapsed) {
-        const newRatio = sizeToRatio(size);
+        const newRatio = sizeToRatio(panelSize.asPercentage);
         onRatioChange(newRatio);
       }
     },
@@ -311,8 +312,10 @@ const CollapsibleSplitPaneWithContent: React.FC<
   );
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
-  }, []);
+    if (!isAnimating) {
+      setIsDragging(true);
+    }
+  }, [isAnimating]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
@@ -321,12 +324,12 @@ const CollapsibleSplitPaneWithContent: React.FC<
   // Sync with external collapsed prop changes
   useEffect(() => {
     if (collapsed && !isAnimating && secondaryPanelRef.current) {
-      const currentSize = secondaryPanelRef.current.getSize();
+      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize > 0) {
         handleCollapse();
       }
     } else if (!collapsed && !isAnimating && secondaryPanelRef.current) {
-      const currentSize = secondaryPanelRef.current.getSize();
+      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize === 0) {
         handleExpand();
       }
@@ -409,16 +412,15 @@ const CollapsibleSplitPaneWithContent: React.FC<
         </>
       ) : (
         // Expanded state: resizable split pane
-        <PanelGroup direction="vertical" onLayout={handleDragEnd}>
+        <Group orientation="vertical" onLayoutChange={handleDragStart} onLayoutChanged={handleDragEnd}>
           <Panel
-            ref={secondaryPanelRef}
+            panelRef={secondaryPanelRef}
             collapsible
-            defaultSize={ratioToSize(ratio)}
-            minSize={ratioToSize(minRatio)}
-            maxSize={ratioToSize(maxRatio)}
-            collapsedSize={0}
+            defaultSize={`${ratioToSize(ratio)}%`}
+            minSize={`${ratioToSize(minRatio)}%`}
+            maxSize={`${ratioToSize(maxRatio)}%`}
+            collapsedSize="0%"
             onResize={handleSecondaryResize}
-            onCollapse={() => onCollapsedChange(true)}
             className={secondaryPanelClassName}
           >
             <div className="csp-panel-content">
@@ -453,17 +455,14 @@ const CollapsibleSplitPaneWithContent: React.FC<
             </div>
           </Panel>
 
-          <PanelResizeHandle
-            className="csp-resize-handle"
-            onDragging={handleDragStart}
-          >
+          <Separator className="csp-resize-handle">
             <div className="csp-resize-handle-bar" />
-          </PanelResizeHandle>
+          </Separator>
 
-          <Panel className="csp-primary-panel" minSize={20}>
+          <Panel className="csp-primary-panel" minSize="20%">
             <div className="csp-panel-content">{primaryContent}</div>
           </Panel>
-        </PanelGroup>
+        </Group>
       )}
     </div>
   );
