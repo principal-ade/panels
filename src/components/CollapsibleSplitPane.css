@@ -7,30 +7,33 @@
   background-color: var(--panel-background);
 }
 
-/* Collapsed header bar */
-.csp-collapsed-header {
+/* Header bar - always at top */
+.csp-header {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
   background-color: var(--panel-handle);
   border-bottom: 1px solid var(--panel-border, rgba(128, 128, 128, 0.2));
-  cursor: pointer;
   user-select: none;
   flex-shrink: 0;
   transition: background-color 0.15s ease;
 }
 
-.csp-collapsed-header:hover {
+.csp-header-collapsed {
+  cursor: pointer;
+}
+
+.csp-header-collapsed:hover {
   background-color: var(--panel-handle-hover);
 }
 
-.csp-collapsed-header:focus {
+.csp-header-collapsed:focus {
   outline: none;
   box-shadow: inset 0 0 0 2px var(--panel-focus-ring, rgba(59, 130, 246, 0.5));
 }
 
-.csp-collapsed-header-icon {
+.csp-header-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,7 +41,7 @@
   font-size: 14px;
 }
 
-.csp-collapsed-header-title {
+.csp-header-title {
   flex: 1;
   font-size: 12px;
   font-weight: 500;
@@ -48,7 +51,7 @@
   text-overflow: ellipsis;
 }
 
-.csp-collapsed-header-expand {
+.csp-header-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -63,9 +66,17 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.csp-collapsed-header-expand:hover {
+.csp-header-toggle:hover {
   background-color: var(--panel-button-hover, rgba(128, 128, 128, 0.2));
   color: var(--panel-text, #333);
+}
+
+/* Content area below header */
+.csp-content-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Primary content when collapsed (takes full remaining space) */
@@ -98,60 +109,10 @@
   overflow: hidden;
 }
 
-/* Secondary panel header (when expanded) */
-.csp-secondary-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  height: 28px;
-  background-color: var(--panel-handle);
-  border-bottom: 1px solid var(--panel-border, rgba(128, 128, 128, 0.2));
-  flex-shrink: 0;
-}
-
-.csp-secondary-header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--panel-text-secondary, #888);
-  font-size: 14px;
-}
-
-.csp-secondary-header-title {
-  flex: 1;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--panel-text, #333);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.csp-secondary-header-collapse {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--panel-text-secondary, #888);
-  cursor: pointer;
-  border-radius: 3px;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.csp-secondary-header-collapse:hover {
-  background-color: var(--panel-button-hover, rgba(128, 128, 128, 0.2));
-  color: var(--panel-text, #333);
-}
-
 /* Secondary panel body (scrollable content area) */
 .csp-secondary-body {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  height: 100%;
   overflow: auto;
 }
 

@@ -32,9 +32,6 @@ const meta = {
       control: { type: 'range', min: 0.1, max: 0.8, step: 0.05 },
       description: 'Split ratio (0-1) for secondary panel',
     },
-    minRatio: {
-      control: { type: 'range', min: 0.05, max: 0.3, step: 0.05 },
-    },
     maxRatio: {
       control: { type: 'range', min: 0.5, max: 0.9, step: 0.05 },
     },
@@ -181,19 +178,11 @@ export const Default: Story = {
       icon: <FileIcon />,
       title: 'skill-output.md',
     },
-    minRatio: 0.15,
     maxRatio: 0.7,
     collapsedHeight: 28,
     animationDuration: 200,
     theme: slateTheme,
   },
-  decorators: [
-    (Story) => (
-      <div style={{ height: '500px', width: '100%' }}>
-        <Story />
-      </div>
-    ),
-  ],
 };
 
 // Story showing collapsed state
@@ -221,19 +210,11 @@ export const CollapsedByDefault: Story = {
       icon: <FileIcon />,
       title: 'test-results.log',
     },
-    minRatio: 0.15,
     maxRatio: 0.7,
     collapsedHeight: 28,
     animationDuration: 200,
     theme: slateTheme,
   },
-  decorators: [
-    (Story) => (
-      <div style={{ height: '400px', width: '100%' }}>
-        <Story />
-      </div>
-    ),
-  ],
 };
 
 // Story with terminal use case
@@ -309,13 +290,6 @@ const TerminalUseCaseComponent = () => {
 export const TerminalUseCase: Story = {
   render: TerminalUseCaseComponent,
   args: {} as CollapsibleSplitPaneProps,
-  decorators: [
-    (Story) => (
-      <div style={{ height: '500px', width: '100%' }}>
-        <Story />
-      </div>
-    ),
-  ],
 };
 
 // Story showing different header heights
@@ -378,11 +352,4 @@ const HeaderHeightsComponent = () => {
 export const HeaderHeights: Story = {
   render: HeaderHeightsComponent,
   args: {} as CollapsibleSplitPaneProps,
-  decorators: [
-    (Story) => (
-      <div style={{ height: '400px', width: '100%' }}>
-        <Story />
-      </div>
-    ),
-  ],
 };

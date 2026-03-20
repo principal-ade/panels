@@ -53,9 +53,6 @@ export interface CollapsibleSplitPaneProps {
   /** Callback when ratio changes via drag */
   onRatioChange?: (ratio: number) => void;
 
-  /** Minimum ratio for secondary panel (default: 0.1) */
-  minRatio?: number;
-
   /** Maximum ratio for secondary panel (default: 0.8) */
   maxRatio?: number;
 
@@ -100,7 +97,6 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
   onCollapsedChange,
   ratio = 0.3,
   onRatioChange,
-  minRatio = 0.1,
   maxRatio = 0.8,
   collapsedHeight = 28,
   theme,
@@ -138,7 +134,6 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
       onCollapsedChange={onCollapsedChange ?? (() => {})}
       ratio={ratio}
       onRatioChange={onRatioChange ?? (() => {})}
-      minRatio={minRatio}
       maxRatio={maxRatio}
       collapsedHeight={collapsedHeight}
       theme={theme}
@@ -174,7 +169,6 @@ const CollapsibleSplitPaneWithContent: React.FC<
   onCollapsedChange,
   ratio,
   onRatioChange,
-  minRatio = 0.1,
   maxRatio = 0.8,
   collapsedHeight = 28,
   theme,
@@ -192,10 +186,17 @@ const CollapsibleSplitPaneWithContent: React.FC<
   const animationFrameRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number | undefined>(undefined);
   const lastExpandedRatioRef = useRef(ratio);
+  const isAnimatingRef = useRef(false); // Sync ref for immediate checks
+  const collapsedRef = useRef(collapsed); // Sync ref for collapsed state
 
   // Convert ratio (0-1) to panel size (0-100)
   const ratioToSize = (r: number) => r * 100;
   const sizeToRatio = (s: number) => s / 100;
+
+  // Keep collapsedRef in sync
+  useEffect(() => {
+    collapsedRef.current = collapsed;
+  }, [collapsed]);
 
   // Store the last expanded ratio so we can restore it
   useEffect(() => {
@@ -227,18 +228,15 @@ const CollapsibleSplitPaneWithContent: React.FC<
             : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
         const newSize = fromSize + (toSize - fromSize) * eased;
-        secondaryPanelRef.current.resize(newSize);
+        secondaryPanelRef.current.resize(`${newSize}%`);
 
         if (progress < 1) {
           animationFrameRef.current = requestAnimationFrame(animate);
         } else {
-          if (toSize === 0) {
-            secondaryPanelRef.current.collapse();
-          } else {
-            secondaryPanelRef.current.resize(toSize);
-          }
-          setIsAnimating(false);
+          secondaryPanelRef.current.resize(`${toSize}%`);
           if (onComplete) onComplete();
+          isAnimatingRef.current = false;
+          setIsAnimating(false);
         }
       };
 
@@ -248,13 +246,20 @@ const CollapsibleSplitPaneWithContent: React.FC<
   );
 
   const handleCollapse = useCallback(() => {
-    if (isAnimating || isDragging) return;
+    if (isAnimating || isDragging || !secondaryPanelRef.current) return;
 
+    // Save the current ratio before collapsing
+    if (ratio > 0) {
+      lastExpandedRatioRef.current = ratio;
+    }
+
+    isAnimatingRef.current = true;
     setIsAnimating(true);
     onCollapseStart?.();
 
     const currentSize = ratioToSize(ratio);
     animatePanel(currentSize, 0, () => {
+      collapsedRef.current = true; // Set immediately before state update
       onCollapsedChange(true);
       onCollapseComplete?.();
     });
@@ -269,8 +274,9 @@ const CollapsibleSplitPaneWithContent: React.FC<
   ]);
 
   const handleExpand = useCallback(() => {
-    if (isAnimating || isDragging) return;
+    if (isAnimating || isDragging || !secondaryPanelRef.current) return;
 
+    isAnimatingRef.current = true;
     setIsAnimating(true);
     onExpandStart?.();
 
@@ -278,6 +284,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
     const targetSize = ratioToSize(targetRatio);
 
     animatePanel(0, targetSize, () => {
+      collapsedRef.current = false;
       onCollapsedChange(false);
       onRatioChange(targetRatio);
       onExpandComplete?.();
@@ -303,12 +310,29 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   const handleSecondaryResize = useCallback(
     (panelSize: PanelSize) => {
-      if (!isAnimating && !collapsed) {
-        const newRatio = sizeToRatio(panelSize.asPercentage);
+      // Use refs for immediate check (state updates are async)
+      if (isAnimatingRef.current) return;
+
+      const newRatio = sizeToRatio(panelSize.asPercentage);
+
+      // Sync collapsed state with actual panel size when dragging
+      if (newRatio <= 0.01 && !collapsedRef.current) {
+        // Dragged to ~0, mark as collapsed
+        // Use 40% as default expand size since drag-to-collapse means last ratio was tiny
+        lastExpandedRatioRef.current = 0.4;
+        collapsedRef.current = true;
+        onCollapsedChange(true);
+      } else if (newRatio > 0.01 && collapsedRef.current) {
+        // Dragged from 0 to visible, mark as expanded
+        collapsedRef.current = false;
+        onCollapsedChange(false);
+      }
+
+      if (!collapsedRef.current) {
         onRatioChange(newRatio);
       }
     },
-    [isAnimating, collapsed, onRatioChange]
+    [onRatioChange, onCollapsedChange]
   );
 
   const handleDragStart = useCallback(() => {
@@ -361,98 +385,96 @@ const CollapsibleSplitPaneWithContent: React.FC<
       className={`collapsible-split-pane ${className}`}
       style={{ ...themeStyles, ...style }}
     >
-      {collapsed ? (
-        // Collapsed state: show header bar + primary content
-        <>
-          <div
-            className="csp-collapsed-header"
-            style={{ height: collapsedHeight }}
-            onClick={handleToggle}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleToggle();
+      {/* Header - always at top, never moves */}
+      <div
+        className={`csp-header ${collapsed ? 'csp-header-collapsed' : ''}`}
+        style={{
+          height: collapsedHeight,
+          backgroundColor: theme.colors.backgroundSecondary,
+          borderBottom: `1px solid ${theme.colors.border}`,
+        }}
+        onClick={collapsed ? handleToggle : undefined}
+        role={collapsed ? 'button' : undefined}
+        tabIndex={collapsed ? 0 : undefined}
+        onKeyDown={
+          collapsed
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleToggle();
+                }
               }
-            }}
-            aria-expanded={false}
-            aria-label={`Expand ${collapsedHeader.title}`}
+            : undefined
+        }
+        aria-expanded={!collapsed}
+        aria-label={
+          collapsed
+            ? `Expand ${collapsedHeader.title}`
+            : collapsedHeader.title
+        }
+      >
+        {collapsedHeader.icon && (
+          <span
+            className="csp-header-icon"
+            style={{ color: theme.colors.textSecondary }}
           >
-            {collapsedHeader.icon && (
-              <span className="csp-collapsed-header-icon">
-                {collapsedHeader.icon}
-              </span>
-            )}
-            <span className="csp-collapsed-header-title">
-              {collapsedHeader.title}
-            </span>
-            <button
-              className="csp-collapsed-header-expand"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggle();
-              }}
-              aria-label={`Expand ${collapsedHeader.title}`}
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <path d="M3 5L6 8L9 5" />
-              </svg>
-            </button>
-          </div>
-          <div className="csp-primary-content-full">{primaryContent}</div>
-        </>
-      ) : (
-        // Expanded state: resizable split pane
-        <Group orientation="vertical" onLayoutChange={handleDragStart} onLayoutChanged={handleDragEnd}>
+            {collapsedHeader.icon}
+          </span>
+        )}
+        <span
+          className="csp-header-title"
+          style={{
+            color: theme.colors.text,
+            fontFamily: theme.fonts.body,
+            fontSize: theme.fontSizes[1],
+            fontWeight: theme.fontWeights.medium,
+          }}
+        >
+          {collapsedHeader.title}
+        </span>
+        <button
+          className="csp-header-toggle"
+          style={{ color: theme.colors.textSecondary }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggle();
+          }}
+          aria-label={
+            collapsed
+              ? `Expand ${collapsedHeader.title}`
+              : `Collapse ${collapsedHeader.title}`
+          }
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <path d={collapsed ? 'M3 5L6 8L9 5' : 'M3 7L6 4L9 7'} />
+          </svg>
+        </button>
+      </div>
+
+      {/* Content area - always render the Group */}
+      <div className="csp-content-area">
+        <Group
+          orientation="vertical"
+          onLayoutChange={handleDragStart}
+          onLayoutChanged={handleDragEnd}
+        >
           <Panel
             panelRef={secondaryPanelRef}
-            collapsible
-            defaultSize={`${ratioToSize(ratio)}%`}
-            minSize={`${ratioToSize(minRatio)}%`}
+            defaultSize={collapsed ? '0%' : `${ratioToSize(ratio)}%`}
+            minSize="0%"
             maxSize={`${ratioToSize(maxRatio)}%`}
-            collapsedSize="0%"
             onResize={handleSecondaryResize}
             className={secondaryPanelClassName}
           >
-            <div className="csp-panel-content">
-              <div className="csp-secondary-header">
-                {collapsedHeader.icon && (
-                  <span className="csp-secondary-header-icon">
-                    {collapsedHeader.icon}
-                  </span>
-                )}
-                <span className="csp-secondary-header-title">
-                  {collapsedHeader.title}
-                </span>
-                <button
-                  className="csp-secondary-header-collapse"
-                  onClick={handleCollapse}
-                  aria-label={`Collapse ${collapsedHeader.title}`}
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M3 7L6 4L9 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className="csp-secondary-body">{secondaryContent}</div>
-            </div>
+            <div className="csp-secondary-body">{secondaryContent}</div>
           </Panel>
 
           <Separator className="csp-resize-handle">
@@ -463,7 +485,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
             <div className="csp-panel-content">{primaryContent}</div>
           </Panel>
         </Group>
-      )}
+      </div>
     </div>
   );
 };
