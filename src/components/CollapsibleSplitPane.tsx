@@ -26,23 +26,31 @@ export interface CollapsibleSplitPaneProps {
   /** Content for the primary panel (bottom, always visible) */
   primaryContent: ReactNode;
 
-  /** Content for the secondary panel (top, collapsible) */
-  secondaryContent: ReactNode;
+  /**
+   * Content for the secondary panel (top, collapsible).
+   * When undefined/null, the component renders only the primary content
+   * without any split pane UI - useful as a stable wrapper that can
+   * later receive secondary content without remounting.
+   */
+  secondaryContent?: ReactNode;
 
-  /** Configuration for the collapsed header bar */
-  collapsedHeader: CollapsedHeaderConfig;
+  /**
+   * Configuration for the collapsed header bar.
+   * Required when secondaryContent is provided.
+   */
+  collapsedHeader?: CollapsedHeaderConfig;
 
   /** Whether the secondary panel is collapsed */
-  collapsed: boolean;
+  collapsed?: boolean;
 
   /** Callback when collapsed state changes */
-  onCollapsedChange: (collapsed: boolean) => void;
+  onCollapsedChange?: (collapsed: boolean) => void;
 
   /** Split ratio (0-1) - proportion of space for secondary panel when expanded */
-  ratio: number;
+  ratio?: number;
 
   /** Callback when ratio changes via drag */
-  onRatioChange: (ratio: number) => void;
+  onRatioChange?: (ratio: number) => void;
 
   /** Minimum ratio for secondary panel (default: 0.1) */
   minRatio?: number;
@@ -84,6 +92,80 @@ export interface CollapsibleSplitPaneProps {
  * Supports drag-to-resize and remembers the ratio per instance.
  */
 export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
+  primaryContent,
+  secondaryContent,
+  collapsedHeader,
+  collapsed = true,
+  onCollapsedChange,
+  ratio = 0.3,
+  onRatioChange,
+  minRatio = 0.1,
+  maxRatio = 0.8,
+  collapsedHeight = 28,
+  theme,
+  className = '',
+  style,
+  animationDuration = 200,
+  onCollapseStart,
+  onCollapseComplete,
+  onExpandStart,
+  onExpandComplete,
+}) => {
+  const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
+
+  // When no secondary content, just render primary content directly
+  // This provides a stable wrapper that won't cause remounts when
+  // secondary content is added later
+  if (!secondaryContent) {
+    return (
+      <div
+        className={`collapsible-split-pane ${className}`}
+        style={{ ...themeStyles, ...style }}
+      >
+        <div className="csp-primary-content-full">{primaryContent}</div>
+      </div>
+    );
+  }
+
+  // Secondary content exists - render the full split pane
+  return (
+    <CollapsibleSplitPaneWithContent
+      primaryContent={primaryContent}
+      secondaryContent={secondaryContent}
+      collapsedHeader={collapsedHeader ?? { title: 'Content' }}
+      collapsed={collapsed}
+      onCollapsedChange={onCollapsedChange ?? (() => {})}
+      ratio={ratio}
+      onRatioChange={onRatioChange ?? (() => {})}
+      minRatio={minRatio}
+      maxRatio={maxRatio}
+      collapsedHeight={collapsedHeight}
+      theme={theme}
+      className={className}
+      style={style}
+      animationDuration={animationDuration}
+      onCollapseStart={onCollapseStart}
+      onCollapseComplete={onCollapseComplete}
+      onExpandStart={onExpandStart}
+      onExpandComplete={onExpandComplete}
+    />
+  );
+};
+
+/**
+ * Internal component that handles the actual split pane logic
+ * when secondary content is present.
+ */
+const CollapsibleSplitPaneWithContent: React.FC<
+  Omit<CollapsibleSplitPaneProps, 'secondaryContent' | 'collapsedHeader' | 'collapsed' | 'onCollapsedChange' | 'ratio' | 'onRatioChange'> & {
+    secondaryContent: ReactNode;
+    collapsedHeader: CollapsedHeaderConfig;
+    collapsed: boolean;
+    onCollapsedChange: (collapsed: boolean) => void;
+    ratio: number;
+    onRatioChange: (ratio: number) => void;
+  }
+> = ({
   primaryContent,
   secondaryContent,
   collapsedHeader,
