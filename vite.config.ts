@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
+import { libInjectCss } from 'vite-plugin-lib-inject-css';
 import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => ({
@@ -10,6 +11,7 @@ export default defineConfig(({ mode }) => ({
       jsxRuntime: 'automatic',
       jsxImportSource: 'react',
     }),
+    libInjectCss(),
     dts({
       insertTypesEntry: true,
       exclude: ['**/*.stories.tsx', '**/*.test.tsx'],
@@ -27,14 +29,22 @@ export default defineConfig(({ mode }) => ({
       fileName: (format) => `index.${format === 'es' ? 'esm' : 'umd'}.js`,
     },
     rollupOptions: {
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-        'react-resizable-panels',
-        '@principal-ade/industry-theme',
-      ],
+      external: (id) => {
+        // Don't externalize CSS files - bundle them
+        if (id.endsWith('.css')) return false;
+
+        // Externalize these packages
+        const externals = [
+          'react',
+          'react-dom',
+          'react/jsx-runtime',
+          'react/jsx-dev-runtime',
+          'react-resizable-panels',
+          '@principal-ade/industry-theme',
+        ];
+
+        return externals.some(ext => id === ext || id.startsWith(ext + '/'));
+      },
       output: {
         globals: {
           'react': 'React',
@@ -47,6 +57,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
     sourcemap: true,
+    cssCodeSplit: false,
     minify: 'terser',
   },
   resolve: {

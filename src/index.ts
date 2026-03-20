@@ -1,3 +1,15 @@
+// Import all component CSS for auto-injection
+import './components/AnimatedResizableLayout.css';
+import './components/AnimatedVerticalLayout.css';
+import './components/CollapsibleSplitPane.css';
+import './components/ConfigurablePanelLayout.css';
+import './components/EditablePanelLayout.css';
+import './components/PanelConfigurator.css';
+import './components/TabGroup.css';
+import './components/SnapCarousel.css';
+import './components/MobileTabNav.css';
+import './styles/globals.css';
+
 export { AnimatedResizableLayout, type AnimatedResizableLayoutProps } from './components/AnimatedResizableLayout';
 export { AnimatedVerticalLayout, type AnimatedVerticalLayoutProps } from './components/AnimatedVerticalLayout';
 export { CollapsibleSplitPane, type CollapsibleSplitPaneProps, type CollapsedHeaderConfig } from './components/CollapsibleSplitPane';
