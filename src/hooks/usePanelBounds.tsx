@@ -107,6 +107,7 @@ export const PanelBoundsProvider: React.FC<PanelBoundsProviderProps> = ({
         style={{
           width: '100%',
           height: '100%',
+          minWidth: 0,
         }}
       >
         {children}

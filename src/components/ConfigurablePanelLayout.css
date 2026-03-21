@@ -13,6 +13,7 @@
 .three-panel-item {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   position: relative;
   background-color: var(--panel-background);
@@ -25,12 +26,17 @@
   border-radius: 12px;
 }
 
-.three-panel-item.collapsible-panel {
-  will-change: flex;
+/* Panel transitions - CSS handles the animation, disabled while dragging */
+.three-panel-layout [data-panel] {
+  transition: flex-grow var(--panel-transition-duration, 300ms) var(--panel-transition-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
-.three-panel-item.collapsible-panel.animating {
-  pointer-events: none;
+.three-panel-layout.is-dragging [data-panel] {
+  transition: none;
+}
+
+.three-panel-item.collapsible-panel {
+  will-change: flex;
 }
 
 .three-panel-item.collapsible-panel.collapsed {
@@ -42,13 +48,9 @@
   visibility: hidden;
 }
 
-.three-panel-item.middle-panel {
-  flex: 1;
-  min-width: 200px;
-}
-
 .panel-content-wrapper {
   flex: 1;
+  min-width: 0;
   overflow-x: hidden; /* Never allow horizontal scroll on the wrapper */
   overflow-y: auto;   /* Allow vertical scroll for overflow content */
   will-change: opacity;
