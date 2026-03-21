@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ReactNode, useEffect } from 'react';
+import React, { useState, useCallback, ReactNode, useEffect, forwardRef } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -11,9 +11,12 @@ import {
   useDroppable,
   useDraggable,
 } from '@dnd-kit/core';
-import { ConfigurablePanelLayout, ConfigurablePanelLayoutProps } from './ConfigurablePanelLayout';
+import { ConfigurablePanelLayout, ConfigurablePanelLayoutProps, ConfigurablePanelLayoutHandle } from './ConfigurablePanelLayout';
 import { PanelLayout, PanelDefinition } from './PanelConfigurator';
 import './EditablePanelLayout.css';
+
+// Re-export the handle type for convenience
+export type { ConfigurablePanelLayoutHandle } from './ConfigurablePanelLayout';
 
 export interface EditableConfigurablePanelLayoutProps extends ConfigurablePanelLayoutProps {
   /** Whether edit mode is enabled (controlled) */
@@ -91,14 +94,21 @@ const SlotOverlayWrapper: React.FC<SlotOverlayWrapperProps> = ({
 /**
  * EditableConfigurablePanelLayout - Wrapper component that adds iPhone-style edit mode
  * Allows dragging entire slot sections (left/middle/right) to rearrange them
+ *
+ * @example
+ * // Using the imperative API to set sizes without remounting
+ * const layoutRef = useRef<ConfigurablePanelLayoutHandle>(null);
+ *
+ * // Later, to change sizes:
+ * layoutRef.current?.setLayout({ left: 0, middle: 50, right: 50 });
  */
-export const EditableConfigurablePanelLayout: React.FC<EditableConfigurablePanelLayoutProps> = ({
+export const EditableConfigurablePanelLayout = forwardRef<ConfigurablePanelLayoutHandle, EditableConfigurablePanelLayoutProps>(({
   isEditMode,
   onLayoutChange,
   panels,
   layout,
   ...layoutProps
-}) => {
+}, ref) => {
   const [activeSlot, setActiveSlot] = useState<SlotPosition | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -201,6 +211,7 @@ export const EditableConfigurablePanelLayout: React.FC<EditableConfigurablePanel
       <div className={`editable-panel-layout ${isEditMode ? 'edit-mode-active' : ''}`}>
         {/* Render layout with data attributes */}
         <ConfigurablePanelLayout
+          ref={ref}
           {...layoutProps}
           panels={panels}
           layout={layout}
@@ -219,7 +230,10 @@ export const EditableConfigurablePanelLayout: React.FC<EditableConfigurablePanel
       </div>
     </DndContext>
   );
-};
+});
+
+// Add display name for debugging
+EditableConfigurablePanelLayout.displayName = 'EditableConfigurablePanelLayout';
 
 // Slot Overlays Component - renders absolutely positioned overlays on top of slots
 interface SlotOverlaysProps {

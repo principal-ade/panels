@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
+import React, { ReactNode, useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { flushSync } from 'react-dom';
 import {
   Panel,
@@ -14,6 +14,24 @@ import { PanelLayout, PanelSlot, PanelGroup as PanelGroupType, TabsConfig } from
 import { TabGroup } from './TabGroup';
 import { PanelBoundsProvider } from '../hooks/usePanelBounds';
 import './ConfigurablePanelLayout.css';
+
+/**
+ * Imperative handle for ConfigurablePanelLayout
+ * Allows programmatic control of panel sizes without remounting
+ */
+export interface ConfigurablePanelLayoutHandle {
+  /**
+   * Set panel sizes programmatically without remounting
+   * @param sizes - Object with left, middle, and right sizes (0-100, should sum to 100)
+   */
+  setLayout: (sizes: { left: number; middle: number; right: number }) => void;
+
+  /**
+   * Get current panel sizes
+   * @returns Object with left, middle, and right sizes
+   */
+  getLayout: () => { left: number; middle: number; right: number };
+}
 
 export interface PanelDefinitionWithContent {
   id: string;
@@ -107,8 +125,15 @@ export interface ConfigurablePanelLayoutProps {
  * - For three panels: define all positions (e.g., { left: 'panel1', middle: 'panel2', right: 'panel3' })
  *
  * The component automatically adjusts sizing and behavior based on active panels.
+ *
+ * @example
+ * // Using the imperative API to set sizes without remounting
+ * const layoutRef = useRef<ConfigurablePanelLayoutHandle>(null);
+ *
+ * // Later, to change sizes:
+ * layoutRef.current?.setLayout({ left: 0, middle: 50, right: 50 });
  */
-export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = ({
+export const ConfigurablePanelLayout = forwardRef<ConfigurablePanelLayoutHandle, ConfigurablePanelLayoutProps>(({
   panels,
   layout,
   slotDataAttributes = {},
@@ -135,7 +160,7 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   onRightExpandStart,
   onRightExpandComplete,
   onPanelResize,
-}) => {
+}, ref) => {
   // Auto-detect which panels are active (have content)
   // Support both undefined and null for inactive panels
   const isLeftActive = layout.left !== null && layout.left !== undefined;
@@ -228,6 +253,52 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
   const leftPanelRef = useRef<PanelImperativeHandle>(null);
   const middlePanelRef = useRef<PanelImperativeHandle>(null);
   const rightPanelRef = useRef<PanelImperativeHandle>(null);
+
+  // Expose imperative API for programmatic control
+  useImperativeHandle(ref, () => ({
+    setLayout: (sizes: { left: number; middle: number; right: number }) => {
+      // Use the individual panel refs to resize each panel
+      // This allows setting sizes without remounting the component
+      if (leftPanelRef.current) {
+        if (sizes.left === 0) {
+          leftPanelRef.current.collapse();
+          setLeftCollapsed(true);
+        } else {
+          leftPanelRef.current.resize(sizes.left);
+          setLeftCollapsed(false);
+          setLastExpandedLeftSize(sizes.left);
+        }
+        setLeftSize(sizes.left);
+      }
+      if (middlePanelRef.current) {
+        if (sizes.middle === 0) {
+          middlePanelRef.current.collapse();
+          setMiddleCollapsed(true);
+        } else {
+          middlePanelRef.current.resize(sizes.middle);
+          setMiddleCollapsed(false);
+          setLastExpandedMiddleSize(sizes.middle);
+        }
+        setMiddleSize(sizes.middle);
+      }
+      if (rightPanelRef.current) {
+        if (sizes.right === 0) {
+          rightPanelRef.current.collapse();
+          setRightCollapsed(true);
+        } else {
+          rightPanelRef.current.resize(sizes.right);
+          setRightCollapsed(false);
+          setLastExpandedRightSize(sizes.right);
+        }
+        setRightSize(sizes.right);
+      }
+    },
+    getLayout: () => ({
+      left: leftSize,
+      middle: middleSize,
+      right: rightSize,
+    }),
+  }), [leftSize, middleSize, rightSize]);
 
   // Animation refs
   const leftAnimationFrameRef = useRef<number | undefined>(undefined);
@@ -1137,4 +1208,7 @@ export const ConfigurablePanelLayout: React.FC<ConfigurablePanelLayoutProps> = (
       </Group>
     </div>
   );
-};
+});
+
+// Add display name for debugging
+ConfigurablePanelLayout.displayName = 'ConfigurablePanelLayout';
