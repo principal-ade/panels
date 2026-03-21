@@ -69,12 +69,6 @@ export interface ConfigurablePanelLayoutProps {
     right?: number;
   };
 
-  /** Minimum sizes for each panel when expanded (0-100) - only specify for active panels */
-  minSizes?: {
-    left?: number;
-    middle?: number;
-    right?: number;
-  };
 
   /** CSS class for the layout container */
   className?: string;
@@ -141,7 +135,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   slotDataAttributes = {},
   collapsiblePanels = { left: true, middle: false, right: true },
   defaultSizes = { left: 20, middle: 60, right: 20 },
-  minSizes = { left: 5, middle: 10, right: 5 },
   className = '',
   collapsed = { left: false, middle: false, right: false },
   style,
@@ -182,11 +175,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
     right: isRightActive ? (defaultSizes?.right ?? (activeCount === 2 ? 50 : activeCount === 3 ? 20 : 100)) : 0,
   };
 
-  const computedMinSizes = {
-    left: minSizes?.left ?? 5,
-    middle: minSizes?.middle ?? 10,
-    right: minSizes?.right ?? 5,
-  };
 
   // State for collapsed status - auto-collapse inactive panels
   const [leftCollapsed, setLeftCollapsed] = useState(collapsed.left || !isLeftActive);
@@ -259,29 +247,31 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Expose imperative API for programmatic control
   useImperativeHandle(ref, () => ({
     setLayout: (sizes: { left: number; middle: number; right: number }) => {
-      // Use PanelGroup's setLayout to set all sizes atomically
-      // This ensures proper distribution without intermediate states
-      if (panelGroupRef.current) {
-        // The setLayout method expects an object with panel IDs as keys
-        // Panel IDs are 'left', 'middle', 'right' as defined in the Panel components
-        panelGroupRef.current.setLayout({
-          left: sizes.left,
-          middle: sizes.middle,
-          right: sizes.right,
-        });
-      }
+      if (!panelGroupRef.current) return;
 
-      // Update our internal state to match
+      // Use 1 instead of 0 to avoid library issues with 0 values
+      // See docs/IMPERATIVE_API_RESEARCH.md for details
+      const COLLAPSED_SIZE = 1;
+      const adjustedSizes = {
+        left: sizes.left === 0 ? COLLAPSED_SIZE : sizes.left,
+        middle: sizes.middle === 0 ? COLLAPSED_SIZE : sizes.middle,
+        right: sizes.right === 0 ? COLLAPSED_SIZE : sizes.right,
+      };
+
+      // Set layout with adjusted sizes
+      panelGroupRef.current.setLayout(adjustedSizes);
+
+      // Update internal state (store original intent, not adjusted)
       setLeftSize(sizes.left);
       setMiddleSize(sizes.middle);
       setRightSize(sizes.right);
 
-      // Update collapsed states
+      // Update collapsed states based on original intent
       setLeftCollapsed(sizes.left === 0);
       setMiddleCollapsed(sizes.middle === 0);
       setRightCollapsed(sizes.right === 0);
 
-      // Update last expanded sizes for non-zero values
+      // Preserve last expanded sizes for non-zero panels
       if (sizes.left > 0) setLastExpandedLeftSize(sizes.left);
       if (sizes.middle > 0) setLastExpandedMiddleSize(sizes.middle);
       if (sizes.right > 0) setLastExpandedRightSize(sizes.right);
@@ -901,10 +891,12 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
     if (!leftAnimating && !middleAnimating && !rightAnimating) {
       const size = panelSize.asPercentage;
       setLeftSize(size);
-      // Track the last expanded size (only when > 0)
+      // Track collapsed state and last expanded size
       if (size > 0) {
         setLastExpandedLeftSize(size);
         setLeftCollapsed(false);
+      } else {
+        setLeftCollapsed(true);
       }
     }
   }, [leftAnimating, middleAnimating, rightAnimating]);
@@ -913,10 +905,12 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
     if (!leftAnimating && !middleAnimating && !rightAnimating) {
       const size = panelSize.asPercentage;
       setMiddleSize(size);
-      // Track the last expanded size (only when > 0)
+      // Track collapsed state and last expanded size
       if (size > 0) {
         setLastExpandedMiddleSize(size);
         setMiddleCollapsed(false);
+      } else {
+        setMiddleCollapsed(true);
       }
     }
   }, [leftAnimating, middleAnimating, rightAnimating]);
@@ -925,10 +919,12 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
     if (!leftAnimating && !middleAnimating && !rightAnimating) {
       const size = panelSize.asPercentage;
       setRightSize(size);
-      // Track the last expanded size (only when > 0)
+      // Track collapsed state and last expanded size
       if (size > 0) {
         setLastExpandedRightSize(size);
         setRightCollapsed(false);
+      } else {
+        setRightCollapsed(true);
       }
     }
   }, [leftAnimating, middleAnimating, rightAnimating]);
@@ -1070,9 +1066,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Apply theme as CSS variables
   const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
 
-  const leftPanelMinSize = `${leftAnimating || middleAnimating || rightAnimating ? 0 : computedMinSizes.left}%`;
-  const middlePanelMinSize = `${leftAnimating || middleAnimating || rightAnimating ? 0 : computedMinSizes.middle}%`;
-  const rightPanelMinSize = `${leftAnimating || middleAnimating || rightAnimating ? 0 : computedMinSizes.right}%`;
 
   return (
     <div className={`three-panel-layout ${className}`} style={{ ...themeStyles, ...style }}>
@@ -1083,7 +1076,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           panelRef={leftPanelRef}
           collapsible={collapsiblePanels.left || !isLeftActive}
           defaultSize={(collapsed.left || !isLeftActive) ? '0%' : `${computedDefaultSizes.left}%`}
-          minSize={leftPanelMinSize}
           collapsedSize="0%"
           onResize={handleLeftResize}
           className={getPanelClassName('left')}
@@ -1130,7 +1122,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           panelRef={middlePanelRef}
           collapsible={collapsiblePanels.middle || !isMiddleActive}
           defaultSize={(collapsed.middle || !isMiddleActive) ? '0%' : `${computedDefaultSizes.middle}%`}
-          minSize={middlePanelMinSize}
           collapsedSize="0%"
           onResize={handleMiddleResize}
           className={getPanelClassName('middle')}
@@ -1177,7 +1168,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           panelRef={rightPanelRef}
           collapsible={collapsiblePanels.right || !isRightActive}
           defaultSize={(collapsed.right || !isRightActive) ? '0%' : `${computedDefaultSizes.right}%`}
-          minSize={rightPanelMinSize}
           collapsedSize="0%"
           onResize={handleRightResize}
           className={getPanelClassName('right')}

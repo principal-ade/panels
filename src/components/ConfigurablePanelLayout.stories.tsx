@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { ConfigurablePanelLayout, PanelDefinitionWithContent } from './ConfigurablePanelLayout';
+import { ConfigurablePanelLayout, PanelDefinitionWithContent, ConfigurablePanelLayoutHandle } from './ConfigurablePanelLayout';
 import { PanelLayout } from './PanelConfigurator';
 import { slateTheme, terminalTheme } from '@principal-ade/industry-theme';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { SnapCarousel, SnapCarouselRef } from './SnapCarousel';
 
 const meta = {
@@ -664,4 +664,116 @@ const CarouselBugTestComponent = () => {
 export const CarouselBugTest: Story = {
   name: 'Carousel Bug Test (Right Collapsed)',
   render: () => <CarouselBugTestComponent />,
+};
+
+// Test Imperative API - setLayout
+const ImperativeAPITestComponent = () => {
+  const layoutRef = useRef<ConfigurablePanelLayoutHandle>(null);
+  const [currentSizes, setCurrentSizes] = useState({ left: 25, middle: 50, right: 25 });
+  const [log, setLog] = useState<string[]>([]);
+  const isProgrammaticResize = useRef(false);
+
+  const addLog = (msg: string) => {
+    setLog((prev) => [...prev.slice(-10), `${Date.now() % 100000}: ${msg}`]);
+  };
+
+  const handlePanelResize = useCallback((sizes: { left: number; middle: number; right: number }) => {
+    addLog(`onPanelResize: ${JSON.stringify(sizes)} (programmatic: ${isProgrammaticResize.current})`);
+    if (!isProgrammaticResize.current) {
+      setCurrentSizes(sizes);
+    }
+  }, []);
+
+  const testSetLayout = (sizes: { left: number; middle: number; right: number }) => {
+    addLog(`Calling setLayout(${JSON.stringify(sizes)})`);
+    isProgrammaticResize.current = true;
+
+    // Get layout BEFORE
+    const before = layoutRef.current?.getLayout();
+    addLog(`Before: ${JSON.stringify(before)}`);
+
+    // Call setLayout
+    layoutRef.current?.setLayout(sizes);
+
+    // Get layout AFTER (immediate)
+    const after = layoutRef.current?.getLayout();
+    addLog(`After (immediate): ${JSON.stringify(after)}`);
+
+    setCurrentSizes(sizes);
+
+    // Get layout after a delay
+    setTimeout(() => {
+      const afterDelay = layoutRef.current?.getLayout();
+      addLog(`After (100ms): ${JSON.stringify(afterDelay)}`);
+      isProgrammaticResize.current = false;
+    }, 100);
+  };
+
+  const panels: PanelDefinitionWithContent[] = [
+    { id: 'left', label: 'Left', content: <div style={{ padding: 20, background: '#e3f2fd', height: '100%' }}>Left Panel</div> },
+    { id: 'middle', label: 'Middle', content: <div style={{ padding: 20, background: '#f3e5f5', height: '100%' }}>Middle Panel</div> },
+    { id: 'right', label: 'Right', content: <div style={{ padding: 20, background: '#e8f5e9', height: '100%' }}>Right Panel</div> },
+  ];
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 12, background: '#1a1a2e', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => testSetLayout({ left: 0, middle: 50, right: 50 })} style={btnStyle}>
+          Set 0/50/50
+        </button>
+        <button onClick={() => testSetLayout({ left: 1, middle: 50, right: 49 })} style={{...btnStyle, backgroundColor: '#e53e3e'}}>
+          Set 1/50/49 (test)
+        </button>
+        <button onClick={() => testSetLayout({ left: 25, middle: 50, right: 25 })} style={btnStyle}>
+          Set 25/50/25
+        </button>
+        <button onClick={() => testSetLayout({ left: 33, middle: 34, right: 33 })} style={btnStyle}>
+          Set 33/34/33
+        </button>
+        <button onClick={() => testSetLayout({ left: 50, middle: 50, right: 0 })} style={btnStyle}>
+          Set 50/50/0
+        </button>
+        <div style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: 12 }}>
+          Current: {currentSizes.left}/{currentSizes.middle}/{currentSizes.right}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div style={{ flex: 1 }}>
+          <ConfigurablePanelLayout
+            ref={layoutRef}
+            panels={panels}
+            layout={{ left: 'left', middle: 'middle', right: 'right' }}
+            defaultSizes={currentSizes}
+            minSizes={{ left: 0, middle: 20, right: 0 }}
+            collapsiblePanels={{ left: true, right: true }}
+            theme={slateTheme}
+            onPanelResize={handlePanelResize}
+          />
+        </div>
+
+        <div style={{ width: 280, background: '#0d1117', color: '#c9d1d9', padding: 8, fontFamily: 'monospace', fontSize: 11, overflow: 'auto' }}>
+          <div style={{ fontWeight: 600, marginBottom: 8, color: '#58a6ff' }}>Event Log</div>
+          {log.map((entry, i) => (
+            <div key={i} style={{ marginBottom: 2, whiteSpace: 'pre-wrap' }}>{entry}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const btnStyle: React.CSSProperties = {
+  padding: '6px 12px',
+  backgroundColor: '#3182ce',
+  color: 'white',
+  border: 'none',
+  borderRadius: 4,
+  cursor: 'pointer',
+  fontSize: 12,
+};
+
+export const ImperativeAPITest: Story = {
+  name: 'Imperative API Test (setLayout)',
+  render: () => <ImperativeAPITestComponent />,
 };
