@@ -102,7 +102,9 @@ const SlotOverlayWrapper: React.FC<SlotOverlayWrapperProps> = ({
  * // Later, to change sizes:
  * layoutRef.current?.setLayout({ left: 0, middle: 50, right: 50 });
  */
-export const EditableConfigurablePanelLayout = forwardRef<ConfigurablePanelLayoutHandle, EditableConfigurablePanelLayoutProps>(({
+export const EditableConfigurablePanelLayout: React.ForwardRefExoticComponent<
+  EditableConfigurablePanelLayoutProps & React.RefAttributes<ConfigurablePanelLayoutHandle>
+> = forwardRef<ConfigurablePanelLayoutHandle, EditableConfigurablePanelLayoutProps>(({
   isEditMode,
   onLayoutChange,
   panels,

@@ -133,7 +133,9 @@ export interface ConfigurablePanelLayoutProps {
  * // Later, to change sizes:
  * layoutRef.current?.setLayout({ left: 0, middle: 50, right: 50 });
  */
-export const ConfigurablePanelLayout = forwardRef<ConfigurablePanelLayoutHandle, ConfigurablePanelLayoutProps>(({
+export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
+  ConfigurablePanelLayoutProps & React.RefAttributes<ConfigurablePanelLayoutHandle>
+> = forwardRef<ConfigurablePanelLayoutHandle, ConfigurablePanelLayoutProps>(({
   panels,
   layout,
   slotDataAttributes = {},
