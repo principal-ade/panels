@@ -259,41 +259,32 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Expose imperative API for programmatic control
   useImperativeHandle(ref, () => ({
     setLayout: (sizes: { left: number; middle: number; right: number }) => {
-      // Use the individual panel refs to resize each panel
-      // This allows setting sizes without remounting the component
-      if (leftPanelRef.current) {
-        if (sizes.left === 0) {
-          leftPanelRef.current.collapse();
-          setLeftCollapsed(true);
-        } else {
-          leftPanelRef.current.resize(sizes.left);
-          setLeftCollapsed(false);
-          setLastExpandedLeftSize(sizes.left);
-        }
-        setLeftSize(sizes.left);
+      // Use PanelGroup's setLayout to set all sizes atomically
+      // This ensures proper distribution without intermediate states
+      if (panelGroupRef.current) {
+        // The setLayout method expects an object with panel IDs as keys
+        // Panel IDs are 'left', 'middle', 'right' as defined in the Panel components
+        panelGroupRef.current.setLayout({
+          left: sizes.left,
+          middle: sizes.middle,
+          right: sizes.right,
+        });
       }
-      if (middlePanelRef.current) {
-        if (sizes.middle === 0) {
-          middlePanelRef.current.collapse();
-          setMiddleCollapsed(true);
-        } else {
-          middlePanelRef.current.resize(sizes.middle);
-          setMiddleCollapsed(false);
-          setLastExpandedMiddleSize(sizes.middle);
-        }
-        setMiddleSize(sizes.middle);
-      }
-      if (rightPanelRef.current) {
-        if (sizes.right === 0) {
-          rightPanelRef.current.collapse();
-          setRightCollapsed(true);
-        } else {
-          rightPanelRef.current.resize(sizes.right);
-          setRightCollapsed(false);
-          setLastExpandedRightSize(sizes.right);
-        }
-        setRightSize(sizes.right);
-      }
+
+      // Update our internal state to match
+      setLeftSize(sizes.left);
+      setMiddleSize(sizes.middle);
+      setRightSize(sizes.right);
+
+      // Update collapsed states
+      setLeftCollapsed(sizes.left === 0);
+      setMiddleCollapsed(sizes.middle === 0);
+      setRightCollapsed(sizes.right === 0);
+
+      // Update last expanded sizes for non-zero values
+      if (sizes.left > 0) setLastExpandedLeftSize(sizes.left);
+      if (sizes.middle > 0) setLastExpandedMiddleSize(sizes.middle);
+      if (sizes.right > 0) setLastExpandedRightSize(sizes.right);
     },
     getLayout: () => ({
       left: leftSize,
