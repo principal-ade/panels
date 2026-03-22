@@ -59,6 +59,9 @@ export interface CollapsibleSplitPaneProps {
   /** Height of collapsed header bar in pixels (default: 28) */
   collapsedHeight?: number;
 
+  /** Hide the header completely (useful when no content is associated) */
+  hideHeader?: boolean;
+
   /** Theme object for customizing colors */
   theme: Theme;
 
@@ -99,6 +102,7 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
   onRatioChange,
   maxRatio = 0.8,
   collapsedHeight = 28,
+  hideHeader = false,
   theme,
   className = '',
   style,
@@ -136,6 +140,7 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
       onRatioChange={onRatioChange ?? (() => {})}
       maxRatio={maxRatio}
       collapsedHeight={collapsedHeight}
+      hideHeader={hideHeader}
       theme={theme}
       className={className}
       style={style}
@@ -171,6 +176,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
   onRatioChange,
   maxRatio = 0.8,
   collapsedHeight = 28,
+  hideHeader = false,
   theme,
   className = '',
   style,
@@ -386,78 +392,80 @@ const CollapsibleSplitPaneWithContent: React.FC<
       style={{ ...themeStyles, ...style }}
     >
       {/* Header - always at top, never moves */}
-      <div
-        className={`csp-header ${collapsed ? 'csp-header-collapsed' : ''}`}
-        style={{
-          height: collapsedHeight,
-          backgroundColor: theme.colors.backgroundSecondary,
-          borderBottom: `1px solid ${theme.colors.border}`,
-        }}
-        onClick={collapsed ? handleToggle : undefined}
-        role={collapsed ? 'button' : undefined}
-        tabIndex={collapsed ? 0 : undefined}
-        onKeyDown={
-          collapsed
-            ? (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleToggle();
-                }
-              }
-            : undefined
-        }
-        aria-expanded={!collapsed}
-        aria-label={
-          collapsed
-            ? `Expand ${collapsedHeader.title}`
-            : collapsedHeader.title
-        }
-      >
-        {collapsedHeader.icon && (
-          <span
-            className="csp-header-icon"
-            style={{ color: theme.colors.textSecondary }}
-          >
-            {collapsedHeader.icon}
-          </span>
-        )}
-        <span
-          className="csp-header-title"
+      {!hideHeader && (
+        <div
+          className={`csp-header ${collapsed ? 'csp-header-collapsed' : ''}`}
           style={{
-            color: theme.colors.text,
-            fontFamily: theme.fonts.body,
-            fontSize: theme.fontSizes[1],
-            fontWeight: theme.fontWeights.medium,
+            height: collapsedHeight,
+            backgroundColor: theme.colors.backgroundSecondary,
+            borderBottom: `1px solid ${theme.colors.border}`,
           }}
-        >
-          {collapsedHeader.title}
-        </span>
-        <button
-          className="csp-header-toggle"
-          style={{ color: theme.colors.textSecondary }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggle();
-          }}
+          onClick={collapsed ? handleToggle : undefined}
+          role={collapsed ? 'button' : undefined}
+          tabIndex={collapsed ? 0 : undefined}
+          onKeyDown={
+            collapsed
+              ? (e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleToggle();
+                  }
+                }
+              : undefined
+          }
+          aria-expanded={!collapsed}
           aria-label={
             collapsed
               ? `Expand ${collapsedHeader.title}`
-              : `Collapse ${collapsedHeader.title}`
+              : collapsedHeader.title
           }
         >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
+          {collapsedHeader.icon && (
+            <span
+              className="csp-header-icon"
+              style={{ color: theme.colors.textSecondary }}
+            >
+              {collapsedHeader.icon}
+            </span>
+          )}
+          <span
+            className="csp-header-title"
+            style={{
+              color: theme.colors.text,
+              fontFamily: theme.fonts.body,
+              fontSize: theme.fontSizes[1],
+              fontWeight: theme.fontWeights.medium,
+            }}
           >
-            <path d={collapsed ? 'M3 5L6 8L9 5' : 'M3 7L6 4L9 7'} />
-          </svg>
-        </button>
-      </div>
+            {collapsedHeader.title}
+          </span>
+          <button
+            className="csp-header-toggle"
+            style={{ color: theme.colors.textSecondary }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle();
+            }}
+            aria-label={
+              collapsed
+                ? `Expand ${collapsedHeader.title}`
+                : `Collapse ${collapsedHeader.title}`
+            }
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d={collapsed ? 'M3 5L6 8L9 5' : 'M3 7L6 4L9 7'} />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Content area - always render the Group */}
       <div className="csp-content-area">

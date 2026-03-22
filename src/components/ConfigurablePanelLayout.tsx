@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { ReactNode, useState, useRef, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react';
 import {
   Panel,
   Group,
@@ -182,6 +182,16 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
 
   // State for drag detection
   const [isDragging, setIsDragging] = useState(false);
+
+  // State to track if component has mounted - disables transitions on first render
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure the initial render completes before enabling transitions
+    const frame = requestAnimationFrame(() => {
+      setHasMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   // Helper to get panel content by ID
   const getPanelContent = useCallback((panelId: string | null): ReactNode => {
@@ -400,7 +410,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
 
   return (
     <div
-      className={`three-panel-layout ${className} ${isDragging ? 'is-dragging' : ''}`}
+      className={`three-panel-layout ${className} ${isDragging ? 'is-dragging' : ''} ${!hasMounted ? 'is-mounting' : ''}`}
       style={{
         ...themeStyles,
         ...style,

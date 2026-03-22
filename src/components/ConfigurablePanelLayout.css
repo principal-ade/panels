@@ -31,7 +31,8 @@
   transition: flex-grow var(--panel-transition-duration, 300ms) var(--panel-transition-easing, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
-.three-panel-layout.is-dragging [data-panel] {
+.three-panel-layout.is-dragging [data-panel],
+.three-panel-layout.is-mounting [data-panel] {
   transition: none;
 }
 
