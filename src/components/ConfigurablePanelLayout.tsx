@@ -314,6 +314,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Expose imperative API for programmatic control
   useImperativeHandle(ref, () => ({
     setLayout: (sizes: { left: number; middle: number; right: number }) => {
+      console.log('[ConfigurablePanelLayout] setLayout called with:', sizes);
       if (!panelGroupRef.current) {
         console.warn('[ConfigurablePanelLayout] setLayout called but panelGroupRef is null');
         return;
@@ -323,6 +324,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       const currentLayout = panelGroupRef.current.getLayout();
       const currentLeftSize = currentLayout.left ?? 0;
       const currentRightSize = currentLayout.right ?? 0;
+      console.log('[ConfigurablePanelLayout] current layout:', { currentLeftSize, currentRightSize });
 
       // Handle collapse/expand via panel refs for reliable behavior
       // react-resizable-panels setLayout doesn't always work for 0 sizes
@@ -330,6 +332,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       const shouldCollapseRight = sizes.right === 0 || sizes.right < 1;
       const currentLeftCollapsed = currentLeftSize < 1;
       const currentRightCollapsed = currentRightSize < 1;
+      console.log('[ConfigurablePanelLayout] collapse decisions:', { shouldCollapseLeft, shouldCollapseRight, currentLeftCollapsed, currentRightCollapsed });
 
       // Handle left panel collapse/expand
       if (shouldCollapseLeft && !currentLeftCollapsed) {
@@ -357,14 +360,24 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       if (needsExpandLeft || needsExpandRight) {
         // After expanding, we need to set the layout with correct sizes
         // Use requestAnimationFrame to ensure expand animation has started
+        console.log('[ConfigurablePanelLayout] needs expand, using rAF');
         requestAnimationFrame(() => {
+          console.log('[ConfigurablePanelLayout] rAF: calling panelGroupRef.setLayout');
           panelGroupRef.current?.setLayout(sizes);
+          setTimeout(() => {
+            console.log('[ConfigurablePanelLayout] after rAF setLayout:', panelGroupRef.current?.getLayout());
+          }, 100);
         });
-      } else if (!shouldCollapseLeft && !shouldCollapseRight) {
-        // No collapse/expand happening, just resize
+      } else {
+        // Either collapsing, or no collapse/expand needed - set the layout directly
+        // This handles cases like Storybook preset { left: 0, middle: 50, right: 50 }
+        // where left is collapsed but we still need to resize middle and right
+        console.log('[ConfigurablePanelLayout] direct setLayout (no expand needed)');
         panelGroupRef.current.setLayout(sizes);
+        setTimeout(() => {
+          console.log('[ConfigurablePanelLayout] after direct setLayout:', panelGroupRef.current?.getLayout());
+        }, 100);
       }
-      // If we're collapsing, the collapse() call handles it
     },
     collapsePanel: (panel: 'left' | 'right') => {
       if (panel === 'left') {

@@ -1194,6 +1194,126 @@ export const Test12b_TitlebarToggle: Story = {
 };
 
 // =============================================================================
+// TEST 12c: Imperative collapsePanel/expandPanel (decoupled approach)
+// =============================================================================
+const ImperativeCollapseExpandComponent = () => {
+  const layoutRef = useRef<ConfigurablePanelLayoutHandle>(null);
+  const [log, setLog] = useState<string[]>([]);
+
+  // Only track collapsed state, NOT sizes
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
+  const addLog = (msg: string) => {
+    setLog((prev) => [...prev.slice(-30), `${new Date().toISOString().slice(11, 23)}: ${msg}`]);
+  };
+
+  // Toggle using imperative methods - NO size tracking needed
+  const handleToggleLeft = () => {
+    addLog(`--- Toggle Left (currently ${leftCollapsed ? 'collapsed' : 'expanded'}) ---`);
+    if (leftCollapsed) {
+      addLog('Calling expandPanel("left")');
+      layoutRef.current?.expandPanel('left');
+      setLeftCollapsed(false);
+    } else {
+      addLog('Calling collapsePanel("left")');
+      layoutRef.current?.collapsePanel('left');
+      setLeftCollapsed(true);
+    }
+    // Log the layout after a short delay
+    setTimeout(() => {
+      const layout = layoutRef.current?.getLayout();
+      addLog(`Layout after: ${JSON.stringify(layout)}`);
+    }, 100);
+  };
+
+  const handleToggleRight = () => {
+    addLog(`--- Toggle Right (currently ${rightCollapsed ? 'collapsed' : 'expanded'}) ---`);
+    if (rightCollapsed) {
+      addLog('Calling expandPanel("right")');
+      layoutRef.current?.expandPanel('right');
+      setRightCollapsed(false);
+    } else {
+      addLog('Calling collapsePanel("right")');
+      layoutRef.current?.collapsePanel('right');
+      setRightCollapsed(true);
+    }
+    setTimeout(() => {
+      const layout = layoutRef.current?.getLayout();
+      addLog(`Layout after: ${JSON.stringify(layout)}`);
+    }, 100);
+  };
+
+  const panels: PanelDefinitionWithContent[] = [
+    { id: 'left', label: 'Left', content: <div style={{ padding: 20, background: '#e3f2fd', height: '100%' }}>Left Panel</div> },
+    { id: 'middle', label: 'Middle', content: <div style={{ padding: 20, background: '#f3e5f5', height: '100%' }}>Middle Panel</div> },
+    { id: 'right', label: 'Right', content: <div style={{ padding: 20, background: '#e8f5e9', height: '100%' }}>Right Panel</div> },
+  ];
+
+  const handlePanelResize = useCallback((sizes: { left: number; middle: number; right: number }) => {
+    addLog(`onPanelResize: ${JSON.stringify(sizes)}`);
+    // Update collapsed state based on sizes (for UI sync after drag)
+    setLeftCollapsed(sizes.left < 1);
+    setRightCollapsed(sizes.right < 1);
+  }, []);
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 12, background: '#1a1a2e', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <strong style={{ marginRight: 8 }}>Test 12c: Imperative collapse/expand</strong>
+        <button
+          onClick={handleToggleLeft}
+          style={{...btnStyle, backgroundColor: leftCollapsed ? '#38a169' : '#e53e3e'}}
+        >
+          {leftCollapsed ? '◀ Expand Left' : '▶ Collapse Left'}
+        </button>
+        <button
+          onClick={handleToggleRight}
+          style={{...btnStyle, backgroundColor: rightCollapsed ? '#38a169' : '#e53e3e'}}
+        >
+          {rightCollapsed ? 'Expand Right ▶' : 'Collapse Right ◀'}
+        </button>
+        <div style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'monospace' }}>
+          collapsed: L={leftCollapsed ? 'Y' : 'N'} R={rightCollapsed ? 'Y' : 'N'}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flex: 1 }}>
+        <div style={{ flex: 1 }}>
+          <ConfigurablePanelLayout
+            ref={layoutRef}
+            panels={panels}
+            layout={{ left: 'left', middle: 'middle', right: 'right' }}
+            defaultSizes={{ left: 25, middle: 50, right: 25 }}
+            collapsiblePanels={{ left: true, middle: false, right: true }}
+            theme={slateTheme}
+            onPanelResize={handlePanelResize}
+          />
+        </div>
+        <div style={logStyle}>
+          <div style={{ fontWeight: 600, marginBottom: 8, color: '#58a6ff' }}>Imperative Collapse/Expand</div>
+          <div style={{ marginBottom: 8, fontSize: 10, color: '#38a169' }}>
+            Uses collapsePanel() / expandPanel()<br/>
+            - NO size state tracking<br/>
+            - Library manages sizes internally<br/>
+            - Only track collapsed booleans
+          </div>
+          {log.map((entry, i) => <div key={i}>{entry}</div>)}
+          <button onClick={() => setLog([])} style={{...btnStyle, marginTop: 8, backgroundColor: '#4a5568', fontSize: 10}}>
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const Test12c_ImperativeCollapseExpand: Story = {
+  name: '12c. Imperative collapse/expand',
+  render: () => <ImperativeCollapseExpandComponent />,
+};
+
+// =============================================================================
 // TEST 13: Isolate wrapper structure issue
 // =============================================================================
 const WrapperIsolationComponent = () => {
