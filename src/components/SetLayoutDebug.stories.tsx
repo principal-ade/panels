@@ -1037,6 +1037,163 @@ export const Test12_ActualCPL: Story = {
 };
 
 // =============================================================================
+// TEST 12b: Mimics DevWorkspaceTitlebar toggle behavior
+// =============================================================================
+const TitlebarToggleComponent = () => {
+  const layoutRef = useRef<ConfigurablePanelLayoutHandle>(null);
+  const [log, setLog] = useState<string[]>([]);
+
+  // Track panel sizes like DevWorkspaceApp does
+  const [panelSizes, setPanelSizes] = useState({ left: 25, middle: 50, right: 25 });
+
+  // Track last expanded sizes like DevWorkspaceTitlebar does
+  const lastExpandedSizesRef = useRef({ left: 25, right: 25 });
+
+  const addLog = (msg: string) => {
+    setLog((prev) => [...prev.slice(-30), `${new Date().toISOString().slice(11, 23)}: ${msg}`]);
+  };
+
+  // Derive collapsed state from sizes (like titlebar does)
+  const isLeftCollapsed = panelSizes.left < 5;
+  const isRightCollapsed = panelSizes.right < 5;
+
+  // Update last expanded sizes when panels are expanded (like titlebar does)
+  React.useEffect(() => {
+    if (panelSizes.left >= 5) {
+      lastExpandedSizesRef.current.left = panelSizes.left;
+    }
+    if (panelSizes.right >= 5) {
+      lastExpandedSizesRef.current.right = panelSizes.right;
+    }
+  }, [panelSizes]);
+
+  // When panelSizes changes, call setLayout (like DevWorkspacePanelFramework does)
+  React.useEffect(() => {
+    if (layoutRef.current) {
+      addLog(`Effect: setLayout(${JSON.stringify(panelSizes)})`);
+      layoutRef.current.setLayout(panelSizes);
+    }
+  }, [panelSizes]);
+
+  // Toggle left (exactly like DevWorkspaceTitlebar)
+  const handleToggleLeft = () => {
+    addLog(`--- Toggle Left (currently ${isLeftCollapsed ? 'collapsed' : 'expanded'}) ---`);
+    if (isLeftCollapsed) {
+      // Expand: restore last size
+      const newLeft = lastExpandedSizesRef.current.left;
+      const newSizes = {
+        left: newLeft,
+        middle: panelSizes.middle - newLeft,
+        right: panelSizes.right,
+      };
+      addLog(`Expanding left to: ${JSON.stringify(newSizes)}`);
+      setPanelSizes(newSizes);
+    } else {
+      // Collapse: set to 0
+      const newSizes = {
+        left: 0,
+        middle: panelSizes.middle + panelSizes.left,
+        right: panelSizes.right,
+      };
+      addLog(`Collapsing left to: ${JSON.stringify(newSizes)}`);
+      setPanelSizes(newSizes);
+    }
+  };
+
+  // Toggle right (exactly like DevWorkspaceTitlebar)
+  const handleToggleRight = () => {
+    addLog(`--- Toggle Right (currently ${isRightCollapsed ? 'collapsed' : 'expanded'}) ---`);
+    if (isRightCollapsed) {
+      // Expand: restore last size
+      const newRight = lastExpandedSizesRef.current.right;
+      const newSizes = {
+        left: panelSizes.left,
+        middle: panelSizes.middle - newRight,
+        right: newRight,
+      };
+      addLog(`Expanding right to: ${JSON.stringify(newSizes)}`);
+      setPanelSizes(newSizes);
+    } else {
+      // Collapse: set to 0
+      const newSizes = {
+        left: panelSizes.left,
+        middle: panelSizes.middle + panelSizes.right,
+        right: 0,
+      };
+      addLog(`Collapsing right to: ${JSON.stringify(newSizes)}`);
+      setPanelSizes(newSizes);
+    }
+  };
+
+  const panels: PanelDefinitionWithContent[] = [
+    { id: 'left', label: 'Left', content: <div style={{ padding: 20, background: '#e3f2fd', height: '100%' }}>Left Panel</div> },
+    { id: 'middle', label: 'Middle', content: <div style={{ padding: 20, background: '#f3e5f5', height: '100%' }}>Middle Panel</div> },
+    { id: 'right', label: 'Right', content: <div style={{ padding: 20, background: '#e8f5e9', height: '100%' }}>Right Panel</div> },
+  ];
+
+  const handlePanelResize = useCallback((sizes: { left: number; middle: number; right: number }) => {
+    addLog(`onPanelResize: ${JSON.stringify(sizes)}`);
+    // Note: In real app, this would update panelSizes but we skip to avoid feedback loop
+  }, []);
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 12, background: '#1a1a2e', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <strong style={{ marginRight: 8 }}>Test 12b: Titlebar Toggle Behavior</strong>
+        <button
+          onClick={handleToggleLeft}
+          style={{...btnStyle, backgroundColor: isLeftCollapsed ? '#38a169' : '#e53e3e'}}
+        >
+          {isLeftCollapsed ? '◀ Expand Left' : '▶ Collapse Left'}
+        </button>
+        <button
+          onClick={handleToggleRight}
+          style={{...btnStyle, backgroundColor: isRightCollapsed ? '#38a169' : '#e53e3e'}}
+        >
+          {isRightCollapsed ? 'Expand Right ▶' : 'Collapse Right ◀'}
+        </button>
+        <div style={{ marginLeft: 'auto', fontSize: 11, fontFamily: 'monospace' }}>
+          sizes: {panelSizes.left.toFixed(0)}/{panelSizes.middle.toFixed(0)}/{panelSizes.right.toFixed(0)} |
+          lastExpanded: {lastExpandedSizesRef.current.left}/{lastExpandedSizesRef.current.right}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flex: 1 }}>
+        <div style={{ flex: 1 }}>
+          <ConfigurablePanelLayout
+            ref={layoutRef}
+            panels={panels}
+            layout={{ left: 'left', middle: 'middle', right: 'right' }}
+            defaultSizes={{ left: 25, middle: 50, right: 25 }}
+            collapsiblePanels={{ left: true, middle: false, right: true }}
+            theme={slateTheme}
+            onPanelResize={handlePanelResize}
+          />
+        </div>
+        <div style={logStyle}>
+          <div style={{ fontWeight: 600, marginBottom: 8, color: '#58a6ff' }}>Titlebar Toggle Test</div>
+          <div style={{ marginBottom: 8, fontSize: 10, color: '#f97316' }}>
+            Mimics DevWorkspaceTitlebar behavior:<br/>
+            - Tracks lastExpandedSizes<br/>
+            - Derives collapsed from size {'<'} 5<br/>
+            - Updates panelSizes state → triggers setLayout
+          </div>
+          {log.map((entry, i) => <div key={i}>{entry}</div>)}
+          <button onClick={() => setLog([])} style={{...btnStyle, marginTop: 8, backgroundColor: '#4a5568', fontSize: 10}}>
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const Test12b_TitlebarToggle: Story = {
+  name: '12b. Titlebar Toggle Behavior',
+  render: () => <TitlebarToggleComponent />,
+};
+
+// =============================================================================
 // TEST 13: Isolate wrapper structure issue
 // =============================================================================
 const WrapperIsolationComponent = () => {

@@ -331,7 +331,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       const currentLeftCollapsed = currentLeftSize < 1;
       const currentRightCollapsed = currentRightSize < 1;
 
-      // Handle left panel
+      // Handle left panel collapse/expand
       if (shouldCollapseLeft && !currentLeftCollapsed) {
         leftPanelRef.current?.collapse();
         setLeftCollapsed(true);
@@ -340,7 +340,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
         setLeftCollapsed(false);
       }
 
-      // Handle right panel
+      // Handle right panel collapse/expand
       if (shouldCollapseRight && !currentRightCollapsed) {
         rightPanelRef.current?.collapse();
         setRightCollapsed(true);
@@ -349,10 +349,22 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
         setRightCollapsed(false);
       }
 
-      // For non-collapse size changes, use the group's setLayout
-      if (!shouldCollapseLeft && !shouldCollapseRight && !currentLeftCollapsed && !currentRightCollapsed) {
+      // After expand/collapse, set the actual sizes
+      // We need to wait a tick for expand() to finish before setLayout works
+      const needsExpandLeft = !shouldCollapseLeft && currentLeftCollapsed;
+      const needsExpandRight = !shouldCollapseRight && currentRightCollapsed;
+
+      if (needsExpandLeft || needsExpandRight) {
+        // After expanding, we need to set the layout with correct sizes
+        // Use requestAnimationFrame to ensure expand animation has started
+        requestAnimationFrame(() => {
+          panelGroupRef.current?.setLayout(sizes);
+        });
+      } else if (!shouldCollapseLeft && !shouldCollapseRight) {
+        // No collapse/expand happening, just resize
         panelGroupRef.current.setLayout(sizes);
       }
+      // If we're collapsing, the collapse() call handles it
     },
     collapsePanel: (panel: 'left' | 'right') => {
       if (panel === 'left') {
