@@ -314,7 +314,12 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Expose imperative API for programmatic control
   useImperativeHandle(ref, () => ({
     setLayout: (sizes: { left: number; middle: number; right: number }) => {
-      if (!panelGroupRef.current) return;
+      if (!panelGroupRef.current) {
+        console.warn('[ConfigurablePanelLayout] setLayout called but panelGroupRef is null');
+        return;
+      }
+      console.log('[ConfigurablePanelLayout] setLayout called with:', sizes);
+      console.log('[ConfigurablePanelLayout] Current internal state:', { leftCollapsed, rightCollapsed, leftSize, middleSize, rightSize });
       // Call the library's setLayout directly - it handles 0 values correctly when panels are collapsible
       // The library will fire onResize callbacks which will update our state
       panelGroupRef.current.setLayout(sizes);
