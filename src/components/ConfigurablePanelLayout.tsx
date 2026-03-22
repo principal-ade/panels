@@ -26,6 +26,16 @@ export interface ConfigurablePanelLayoutHandle {
   setLayout: (sizes: { left: number; middle: number; right: number }) => void;
 
   /**
+   * Collapse a specific panel
+   */
+  collapsePanel: (panel: 'left' | 'right') => void;
+
+  /**
+   * Expand a specific panel
+   */
+  expandPanel: (panel: 'left' | 'right') => void;
+
+  /**
    * Get current panel sizes
    * @returns Object with left, middle, and right sizes
    */
@@ -246,21 +256,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   const middlePanelRef = useRef<PanelImperativeHandle>(null);
   const rightPanelRef = useRef<PanelImperativeHandle>(null);
 
-  // Expose imperative API for programmatic control
-  useImperativeHandle(ref, () => ({
-    setLayout: (sizes: { left: number; middle: number; right: number }) => {
-      if (!panelGroupRef.current) return;
-      // Call the library's setLayout directly - it handles 0 values correctly when panels are collapsible
-      // The library will fire onResize callbacks which will update our state
-      panelGroupRef.current.setLayout(sizes);
-    },
-    getLayout: () => ({
-      left: leftSize,
-      middle: middleSize,
-      right: rightSize,
-    }),
-  }), [leftSize, middleSize, rightSize]);
-
   // Left panel collapse/expand handlers
   const handleLeftCollapse = useCallback(() => {
     if (isDragging || !collapsiblePanels.left) return;
@@ -315,6 +310,39 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       handleRightCollapse();
     }
   }, [rightCollapsed, handleRightCollapse, handleRightExpand]);
+
+  // Expose imperative API for programmatic control
+  useImperativeHandle(ref, () => ({
+    setLayout: (sizes: { left: number; middle: number; right: number }) => {
+      if (!panelGroupRef.current) return;
+      // Call the library's setLayout directly - it handles 0 values correctly when panels are collapsible
+      // The library will fire onResize callbacks which will update our state
+      panelGroupRef.current.setLayout(sizes);
+    },
+    collapsePanel: (panel: 'left' | 'right') => {
+      if (panel === 'left') {
+        leftPanelRef.current?.collapse();
+        setLeftCollapsed(true);
+      } else {
+        rightPanelRef.current?.collapse();
+        setRightCollapsed(true);
+      }
+    },
+    expandPanel: (panel: 'left' | 'right') => {
+      if (panel === 'left') {
+        leftPanelRef.current?.expand();
+        setLeftCollapsed(false);
+      } else {
+        rightPanelRef.current?.expand();
+        setRightCollapsed(false);
+      }
+    },
+    getLayout: () => ({
+      left: leftSize,
+      middle: middleSize,
+      right: rightSize,
+    }),
+  }), [leftSize, middleSize, rightSize]);
 
   // Resize handlers - update state when panels are resized via drag
   const handleLeftResize = useCallback((panelSize: PanelSize) => {
