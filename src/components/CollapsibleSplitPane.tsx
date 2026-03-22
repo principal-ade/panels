@@ -59,7 +59,7 @@ export interface CollapsibleSplitPaneProps {
   /** Height of collapsed header bar in pixels (default: 28) */
   collapsedHeight?: number;
 
-  /** Hide the header completely (useful when no content is associated) */
+  /** Hide the header completely (default: true, set to false to show header) */
   hideHeader?: boolean;
 
   /** Theme object for customizing colors */
@@ -102,7 +102,7 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
   onRatioChange,
   maxRatio = 0.8,
   collapsedHeight = 28,
-  hideHeader = false,
+  hideHeader = true,
   theme,
   className = '',
   style,
@@ -176,7 +176,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
   onRatioChange,
   maxRatio = 0.8,
   collapsedHeight = 28,
-  hideHeader = false,
+  hideHeader = true,
   theme,
   className = '',
   style,
@@ -476,11 +476,12 @@ const CollapsibleSplitPaneWithContent: React.FC<
         >
           <Panel
             panelRef={secondaryPanelRef}
-            defaultSize={collapsed ? '0%' : `${ratioToSize(ratio)}%`}
+            defaultSize={collapsed || hideHeader ? '0%' : `${ratioToSize(ratio)}%`}
             minSize="0%"
-            maxSize={`${ratioToSize(maxRatio)}%`}
+            maxSize={hideHeader && collapsed ? '0%' : `${ratioToSize(maxRatio)}%`}
             onResize={handleSecondaryResize}
             className={secondaryPanelClassName}
+            style={hideHeader && collapsed ? { display: 'none' } : undefined}
           >
             <div className="csp-secondary-body">{secondaryContent}</div>
           </Panel>

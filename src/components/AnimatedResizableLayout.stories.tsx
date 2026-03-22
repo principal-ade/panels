@@ -347,3 +347,195 @@ export const RightCollapsible: Story = {
     ),
   ],
 };
+
+/**
+ * Component that requires height inheritance to render properly.
+ * Simulates components like graph renderers, canvas editors, etc. that
+ * use height: 100% and need their parent to have a defined height.
+ */
+const HeightDependentContent = ({ label }: { label: string }) => {
+  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setDimensions({ width: Math.round(width), height: Math.round(height) });
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const hasValidHeight = dimensions.height > 0;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        height: '100%',
+        width: '100%',
+        backgroundColor: hasValidHeight ? '#e8f5e9' : '#ffebee',
+        border: `2px solid ${hasValidHeight ? '#4caf50' : '#f44336'}`,
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <h3 style={{ margin: '0 0 10px 0', color: hasValidHeight ? '#2e7d32' : '#c62828' }}>
+        {hasValidHeight ? '✅ Height Inherited!' : '❌ Height is 0!'}
+      </h3>
+      <div style={{ fontFamily: 'monospace', fontSize: '14px', textAlign: 'center' }}>
+        <div>{label}</div>
+        <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
+          {dimensions.width} × {dimensions.height}
+        </div>
+      </div>
+      {!hasValidHeight && (
+        <p style={{ marginTop: '15px', color: '#c62828', fontSize: '12px', maxWidth: '300px', textAlign: 'center' }}>
+          This component uses height: 100% but its parent has no defined height.
+          See NESTED_FLEX_HEIGHT_ISSUE.md for details.
+        </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * This story reproduces a common bug where AnimatedResizableLayout is placed
+ * inside a flex item (not a flex container), causing height: 100% children
+ * to have 0 height.
+ *
+ * The issue: CSS `height: 100%` only works when the parent has an explicitly
+ * defined height. A parent with `flex: 1` is a flex ITEM but doesn't provide
+ * a defined height for percentage calculations.
+ *
+ * The fix: The parent must also be a flex CONTAINER (`display: flex; flex-direction: column`)
+ * and children should use `flex: 1` instead of `height: 100%`.
+ *
+ * @see NESTED_FLEX_HEIGHT_ISSUE.md
+ */
+const NestedFlexChildComponent = (args: AnimatedResizableLayoutProps) => {
+  return (
+    <div style={{
+      height: '500px',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      border: '2px solid #333',
+      fontFamily: 'system-ui, sans-serif',
+    }}>
+      {/* Header - fixed height */}
+      <div style={{
+        height: '50px',
+        backgroundColor: '#1a1a2e',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 20px',
+        flexShrink: 0,
+      }}>
+        <span style={{ fontWeight: 'bold' }}>Header (50px fixed)</span>
+      </div>
+
+      {/* Content area - flex item that should fill remaining space */}
+      {/* BUG: If this is NOT a flex container, children with height: 100% get 0 height */}
+      {/* FIX: Add display: flex; flexDirection: column to make it a flex container */}
+      <div style={{
+        flex: '1 1 0%',
+        minHeight: 0,
+        overflow: 'hidden',
+        // FIX: Uncomment these to make it a flex container:
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        <AnimatedResizableLayout
+          {...args}
+          leftPanel={
+            <div style={{ padding: '10px', height: '100%', boxSizing: 'border-box' }}>
+              <h4 style={{ margin: '0 0 10px 0' }}>Left Panel</h4>
+              <p style={{ fontSize: '12px', color: '#666' }}>
+                Sidebar content here
+              </p>
+            </div>
+          }
+          rightPanel={
+            <HeightDependentContent label="Graph Renderer (height: 100%)" />
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Reproduces the nested flex child height inheritance bug.
+ *
+ * This is a common issue when AnimatedResizableLayout is used inside a flex item
+ * (like a content area below a header). The parent has `flex: 1` but is not a
+ * flex container itself, causing `height: 100%` children to have 0 height.
+ *
+ * **Root cause**: CSS `height: 100%` requires the parent to have a defined height.
+ * `flex: 1` makes an element a flex ITEM (it grows), but doesn't give it a
+ * defined height for percentage calculations.
+ *
+ * **Solution**: The parent must be both a flex item AND a flex container:
+ * ```css
+ * .content-area {
+ *   flex: 1 1 0%;
+ *   min-height: 0;
+ *   display: flex;
+ *   flex-direction: column;
+ * }
+ * ```
+ *
+ * And AnimatedResizableLayout should use `flex: 1` instead of `height: 100%`
+ * (which it now does via scoped CSS selector).
+ */
+export const NestedFlexChild: Story = {
+  render: NestedFlexChildComponent,
+  args: {
+    leftPanel: <div />,
+    rightPanel: <div />,
+    collapsibleSide: 'left',
+    defaultSize: 25,
+    minSize: 10,
+    collapsed: false,
+    animationDuration: 300,
+    animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    theme: slateTheme,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: `
+**Bug**: When AnimatedResizableLayout is placed inside a flex item (e.g., content area below a header),
+children that use \`height: 100%\` may have 0 height on initial render.
+
+**Cause**: CSS \`height: 100%\` requires the parent to have a defined height. A parent with \`flex: 1\`
+is a flex ITEM but doesn't provide a defined height for percentage calculations.
+
+**Fix**: The parent must be both a flex item AND a flex container:
+\`\`\`tsx
+<div style={{
+  flex: '1 1 0%',
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+}}>
+  <AnimatedResizableLayout ... />
+</div>
+\`\`\`
+
+See NESTED_FLEX_HEIGHT_ISSUE.md for full documentation.
+        `,
+      },
+    },
+  },
+};
