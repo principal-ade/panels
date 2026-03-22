@@ -318,11 +318,41 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
         console.warn('[ConfigurablePanelLayout] setLayout called but panelGroupRef is null');
         return;
       }
-      console.log('[ConfigurablePanelLayout] setLayout called with:', sizes);
-      console.log('[ConfigurablePanelLayout] Current internal state:', { leftCollapsed, rightCollapsed, leftSize, middleSize, rightSize });
-      // Call the library's setLayout directly - it handles 0 values correctly when panels are collapsible
-      // The library will fire onResize callbacks which will update our state
-      panelGroupRef.current.setLayout(sizes);
+
+      // Get CURRENT layout from the actual panel group to avoid stale closure issues
+      const currentLayout = panelGroupRef.current.getLayout();
+      const currentLeftSize = currentLayout.left ?? 0;
+      const currentRightSize = currentLayout.right ?? 0;
+
+      // Handle collapse/expand via panel refs for reliable behavior
+      // react-resizable-panels setLayout doesn't always work for 0 sizes
+      const shouldCollapseLeft = sizes.left === 0 || sizes.left < 1;
+      const shouldCollapseRight = sizes.right === 0 || sizes.right < 1;
+      const currentLeftCollapsed = currentLeftSize < 1;
+      const currentRightCollapsed = currentRightSize < 1;
+
+      // Handle left panel
+      if (shouldCollapseLeft && !currentLeftCollapsed) {
+        leftPanelRef.current?.collapse();
+        setLeftCollapsed(true);
+      } else if (!shouldCollapseLeft && currentLeftCollapsed) {
+        leftPanelRef.current?.expand();
+        setLeftCollapsed(false);
+      }
+
+      // Handle right panel
+      if (shouldCollapseRight && !currentRightCollapsed) {
+        rightPanelRef.current?.collapse();
+        setRightCollapsed(true);
+      } else if (!shouldCollapseRight && currentRightCollapsed) {
+        rightPanelRef.current?.expand();
+        setRightCollapsed(false);
+      }
+
+      // For non-collapse size changes, use the group's setLayout
+      if (!shouldCollapseLeft && !shouldCollapseRight && !currentLeftCollapsed && !currentRightCollapsed) {
+        panelGroupRef.current.setLayout(sizes);
+      }
     },
     collapsePanel: (panel: 'left' | 'right') => {
       if (panel === 'left') {
