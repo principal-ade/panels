@@ -319,6 +319,9 @@ const CollapsibleSplitPaneWithContent: React.FC<
     (panelSize: PanelSize) => {
       // Use refs for immediate check (state updates are async)
       if (isAnimatingRef.current) return;
+      // Skip resize events during initial mount - react-resizable-panels may fire
+      // with incorrect sizes before defaultSize is fully applied
+      if (isInitialMountRef.current) return;
 
       const newRatio = sizeToRatio(panelSize.asPercentage);
 
@@ -352,11 +355,19 @@ const CollapsibleSplitPaneWithContent: React.FC<
     setIsDragging(false);
   }, []);
 
+  // Clear initial mount flag after layout settles
+  // This prevents resize callbacks from triggering state changes during mount
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      isInitialMountRef.current = false;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   // Sync with external collapsed prop changes
   // Skip on initial mount - defaultSize already handles initial state
   useEffect(() => {
     if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
       return;
     }
 
