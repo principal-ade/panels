@@ -365,13 +365,15 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   // Clear initial mount flag after layout settles
   // This prevents resize callbacks from triggering state changes during mount
+  // react-resizable-panels fires resize events with incorrect sizes during initial layout,
+  // so we need to wait for layout to fully settle (100ms seems sufficient)
   useEffect(() => {
     console.log('[CSP] mount effect - scheduling clear of isInitialMountRef');
-    const frame = requestAnimationFrame(() => {
+    const timeout = setTimeout(() => {
       console.log('[CSP] clearing isInitialMountRef');
       isInitialMountRef.current = false;
-    });
-    return () => cancelAnimationFrame(frame);
+    }, 100);
+    return () => clearTimeout(timeout);
   }, []);
 
   // Sync with external collapsed prop changes
