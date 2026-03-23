@@ -194,6 +194,7 @@ const CollapsibleSplitPaneWithContent: React.FC<
   const lastExpandedRatioRef = useRef(ratio);
   const isAnimatingRef = useRef(false); // Sync ref for immediate checks
   const collapsedRef = useRef(collapsed); // Sync ref for collapsed state
+  const isInitialMountRef = useRef(true); // Track initial mount to skip animation
 
   // Convert ratio (0-1) to panel size (0-100)
   const ratioToSize = (r: number) => r * 100;
@@ -352,7 +353,13 @@ const CollapsibleSplitPaneWithContent: React.FC<
   }, []);
 
   // Sync with external collapsed prop changes
+  // Skip on initial mount - defaultSize already handles initial state
   useEffect(() => {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
     if (collapsed && !isAnimating && secondaryPanelRef.current) {
       const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize > 0) {
