@@ -186,6 +186,8 @@ const CollapsibleSplitPaneWithContent: React.FC<
   onExpandStart,
   onExpandComplete,
 }) => {
+  // DEBUG logging
+  console.log('[CSP] render', { collapsed, hideHeader, ratio });
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const secondaryPanelRef = useRef<PanelImperativeHandle>(null);
@@ -317,6 +319,12 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   const handleSecondaryResize = useCallback(
     (panelSize: PanelSize) => {
+      console.log('[CSP] onResize', {
+        size: panelSize.asPercentage,
+        isInitialMount: isInitialMountRef.current,
+        isAnimating: isAnimatingRef.current,
+        collapsedRef: collapsedRef.current
+      });
       // Use refs for immediate check (state updates are async)
       if (isAnimatingRef.current) return;
       // Skip resize events during initial mount - react-resizable-panels may fire
@@ -358,7 +366,9 @@ const CollapsibleSplitPaneWithContent: React.FC<
   // Clear initial mount flag after layout settles
   // This prevents resize callbacks from triggering state changes during mount
   useEffect(() => {
+    console.log('[CSP] mount effect - scheduling clear of isInitialMountRef');
     const frame = requestAnimationFrame(() => {
+      console.log('[CSP] clearing isInitialMountRef');
       isInitialMountRef.current = false;
     });
     return () => cancelAnimationFrame(frame);
@@ -367,18 +377,26 @@ const CollapsibleSplitPaneWithContent: React.FC<
   // Sync with external collapsed prop changes
   // Skip on initial mount - defaultSize already handles initial state
   useEffect(() => {
+    const currentSize = secondaryPanelRef.current?.getSize().asPercentage ?? -1;
+    console.log('[CSP] collapsed sync effect', {
+      collapsed,
+      isInitialMount: isInitialMountRef.current,
+      isAnimating,
+      currentSize
+    });
     if (isInitialMountRef.current) {
+      console.log('[CSP] skipping sync - initial mount');
       return;
     }
 
     if (collapsed && !isAnimating && secondaryPanelRef.current) {
-      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize > 0) {
+        console.log('[CSP] triggering handleCollapse from sync effect');
         handleCollapse();
       }
     } else if (!collapsed && !isAnimating && secondaryPanelRef.current) {
-      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize === 0) {
+        console.log('[CSP] triggering handleExpand from sync effect');
         handleExpand();
       }
     }
