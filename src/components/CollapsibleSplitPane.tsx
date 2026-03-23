@@ -114,10 +114,10 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
 }) => {
   const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
 
-  // When no secondary content, just render primary content directly
-  // This provides a stable wrapper that won't cause remounts when
-  // secondary content is added later
-  if (!secondaryContent) {
+  // When no secondary content, OR when collapsed with hidden header (nothing to show),
+  // just render primary content directly. This avoids react-resizable-panels
+  // layout issues when starting at 0% size.
+  if (!secondaryContent || (collapsed && hideHeader)) {
     return (
       <div
         className={`collapsible-split-pane ${className}`}
@@ -128,7 +128,7 @@ export const CollapsibleSplitPane: React.FC<CollapsibleSplitPaneProps> = ({
     );
   }
 
-  // Secondary content exists - render the full split pane
+  // Secondary content exists and is visible - render the full split pane
   return (
     <CollapsibleSplitPaneWithContent
       primaryContent={primaryContent}
@@ -186,8 +186,6 @@ const CollapsibleSplitPaneWithContent: React.FC<
   onExpandStart,
   onExpandComplete,
 }) => {
-  // DEBUG logging
-  console.log('[CSP] render', { collapsed, hideHeader, ratio });
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const secondaryPanelRef = useRef<PanelImperativeHandle>(null);
@@ -196,7 +194,6 @@ const CollapsibleSplitPaneWithContent: React.FC<
   const lastExpandedRatioRef = useRef(ratio);
   const isAnimatingRef = useRef(false); // Sync ref for immediate checks
   const collapsedRef = useRef(collapsed); // Sync ref for collapsed state
-  const isInitialMountRef = useRef(true); // Track initial mount to skip animation
 
   // Convert ratio (0-1) to panel size (0-100)
   const ratioToSize = (r: number) => r * 100;
@@ -319,17 +316,8 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   const handleSecondaryResize = useCallback(
     (panelSize: PanelSize) => {
-      console.log('[CSP] onResize', {
-        size: panelSize.asPercentage,
-        isInitialMount: isInitialMountRef.current,
-        isAnimating: isAnimatingRef.current,
-        collapsedRef: collapsedRef.current
-      });
       // Use refs for immediate check (state updates are async)
       if (isAnimatingRef.current) return;
-      // Skip resize events during initial mount - react-resizable-panels may fire
-      // with incorrect sizes before defaultSize is fully applied
-      if (isInitialMountRef.current) return;
 
       const newRatio = sizeToRatio(panelSize.asPercentage);
 
@@ -363,42 +351,17 @@ const CollapsibleSplitPaneWithContent: React.FC<
     setIsDragging(false);
   }, []);
 
-  // Clear initial mount flag after layout settles
-  // This prevents resize callbacks from triggering state changes during mount
-  // react-resizable-panels fires resize events with incorrect sizes during initial layout,
-  // so we need to wait for layout to fully settle (100ms seems sufficient)
-  useEffect(() => {
-    console.log('[CSP] mount effect - scheduling clear of isInitialMountRef');
-    const timeout = setTimeout(() => {
-      console.log('[CSP] clearing isInitialMountRef');
-      isInitialMountRef.current = false;
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
 
   // Sync with external collapsed prop changes
-  // Skip on initial mount - defaultSize already handles initial state
   useEffect(() => {
-    const currentSize = secondaryPanelRef.current?.getSize().asPercentage ?? -1;
-    console.log('[CSP] collapsed sync effect', {
-      collapsed,
-      isInitialMount: isInitialMountRef.current,
-      isAnimating,
-      currentSize
-    });
-    if (isInitialMountRef.current) {
-      console.log('[CSP] skipping sync - initial mount');
-      return;
-    }
-
     if (collapsed && !isAnimating && secondaryPanelRef.current) {
+      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize > 0) {
-        console.log('[CSP] triggering handleCollapse from sync effect');
         handleCollapse();
       }
     } else if (!collapsed && !isAnimating && secondaryPanelRef.current) {
+      const currentSize = secondaryPanelRef.current.getSize().asPercentage;
       if (currentSize === 0) {
-        console.log('[CSP] triggering handleExpand from sync effect');
         handleExpand();
       }
     }
@@ -416,23 +379,10 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
 
-  // Track if we're still in initial mount phase for CSS hiding
-  const [isMounting, setIsMounting] = useState(true);
-
-  useEffect(() => {
-    // Clear mounting state after initial layout settles
-    const timeout = setTimeout(() => {
-      setIsMounting(false);
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, []);
-
   const secondaryPanelClassName = [
     'csp-secondary-panel',
     isAnimating && !isDragging ? 'csp-animating' : '',
     collapsed ? 'csp-collapsed' : '',
-    // Hide during mount if should be collapsed - prevents flash
-    isMounting && collapsed ? 'csp-mounting-hidden' : '',
   ]
     .filter(Boolean)
     .join(' ');
