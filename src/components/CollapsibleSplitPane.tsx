@@ -416,10 +416,23 @@ const CollapsibleSplitPaneWithContent: React.FC<
 
   const themeStyles = mapThemeToPanelVars(theme) as React.CSSProperties;
 
+  // Track if we're still in initial mount phase for CSS hiding
+  const [isMounting, setIsMounting] = useState(true);
+
+  useEffect(() => {
+    // Clear mounting state after initial layout settles
+    const timeout = setTimeout(() => {
+      setIsMounting(false);
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const secondaryPanelClassName = [
     'csp-secondary-panel',
     isAnimating && !isDragging ? 'csp-animating' : '',
     collapsed ? 'csp-collapsed' : '',
+    // Hide during mount if should be collapsed - prevents flash
+    isMounting && collapsed ? 'csp-mounting-hidden' : '',
   ]
     .filter(Boolean)
     .join(' ');
