@@ -158,7 +158,7 @@ const WithControlsComponent = (args: AnimatedResizableLayoutProps) => {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div
-          style={{ padding: '15px', backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}
+          style={{ padding: '15px', backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', flexShrink: 0 }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <button
@@ -207,7 +207,7 @@ const WithControlsComponent = (args: AnimatedResizableLayoutProps) => {
           </div>
         </div>
 
-        <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <AnimatedResizableLayout
             {...args}
             collapsed={collapsed}
@@ -537,5 +537,140 @@ See NESTED_FLEX_HEIGHT_ISSUE.md for full documentation.
         `,
       },
     },
+  },
+};
+
+/**
+ * Tests that starting with collapsed={true} does NOT animate.
+ * The right panel should immediately have full width without any animation.
+ * This is important for cases like CanvasEditorPanel where the sidebar
+ * should be hidden from the start when there's no workflow.
+ */
+const StartCollapsedComponent = (args: AnimatedResizableLayoutProps) => {
+  const [collapsed, setCollapsed] = React.useState(true);
+  const [dimensionHistory, setDimensionHistory] = React.useState<{ w: number; h: number }[]>([]);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const layoutRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const w = Math.round(entry.contentRect.width);
+      const h = Math.round(entry.contentRect.height);
+      setDimensionHistory(prev => {
+        // Only add if different from last entry
+        const last = prev[prev.length - 1];
+        if (!last || last.w !== w || last.h !== h) {
+          return [...prev, { w, h }];
+        }
+        return prev;
+      });
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const hasWidthAnimation = dimensionHistory.filter((d, i, arr) => i > 0 && arr[i - 1].w !== d.w).length > 2;
+  const hasHeightChange = dimensionHistory.some((d, i, arr) => i > 0 && Math.abs(arr[i - 1].h - d.h) > 10);
+
+  const formatHistory = () => {
+    if (dimensionHistory.length === 0) return 'none';
+    return dimensionHistory.map(d => `${d.w}x${d.h}`).join(' → ');
+  };
+
+  return (
+    <div style={{ height: '500px', width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        padding: '15px',
+        backgroundColor: hasHeightChange ? '#fff3e0' : (hasWidthAnimation ? '#ffebee' : '#e8f5e9'),
+        borderBottom: '2px solid #dee2e6',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
+          <h3 style={{ margin: 0, color: hasHeightChange ? '#e65100' : (hasWidthAnimation ? '#c62828' : '#2e7d32') }}>
+            {hasHeightChange ? '⚠️ HEIGHT CHANGED!' : (hasWidthAnimation ? '❌ Animation detected on mount!' : '✅ No animation on mount')}
+          </h3>
+          <button
+            onClick={() => {
+              setCollapsed(c => !c);
+            }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            {collapsed ? '→ Expand (should animate)' : '← Collapse (should animate)'}
+          </button>
+          <button
+            onClick={() => setDimensionHistory([])}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            Clear History
+          </button>
+        </div>
+        <div style={{ fontFamily: 'monospace', fontSize: '11px', height: '40px', overflow: 'auto', backgroundColor: '#f5f5f5', padding: '4px', borderRadius: '4px' }}>
+          Dimensions (WxH): [{formatHistory()}]
+        </div>
+        <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+          Height should stay constant. Width should animate during expand/collapse.
+        </div>
+      </div>
+      <div ref={layoutRef} style={{ flex: '1 1 0%', minHeight: 0, display: 'flex', flexDirection: 'column', border: '2px solid blue' }}>
+        <AnimatedResizableLayout
+          {...args}
+          collapsed={collapsed}
+          leftPanel={
+            <div style={{ padding: '20px', backgroundColor: '#e8f4ff', height: '100%' }}>
+              <h3>Left Panel (should be collapsed on start)</h3>
+            </div>
+          }
+          rightPanel={
+            <div
+              ref={containerRef}
+              style={{ padding: '20px', backgroundColor: '#fafafa', height: '100%' }}
+            >
+              <h3>Right Panel</h3>
+              <p>This panel should have full width immediately without animation on mount.</p>
+              <p>When you click the toggle button, it SHOULD animate smoothly.</p>
+            </div>
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Verifies that starting with `collapsed={true}` does not trigger an animation.
+ * The left panel should be immediately collapsed, and the right panel should
+ * have full width from the start.
+ */
+export const StartCollapsed: Story = {
+  render: StartCollapsedComponent,
+  args: {
+    leftPanel: <div />,
+    rightPanel: <div />,
+    collapsibleSide: 'left',
+    defaultSize: 30,
+    minSize: 15,
+    collapsed: true,
+    animationDuration: 300,
+    animationEasing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    theme: slateTheme,
   },
 };

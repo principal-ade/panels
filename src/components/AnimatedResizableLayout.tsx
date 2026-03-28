@@ -117,8 +117,11 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
 
         const newSize = fromSize + (toSize - fromSize) * eased;
 
+        console.log('[AnimatedResizableLayout] resize:', { fromSize, toSize, progress, eased, newSize });
+
         // Always use resize during animation, never collapse
-        panelRef.current.resize(newSize);
+        // Try passing as percentage string for v4 compatibility
+        panelRef.current.resize(`${newSize}%`);
 
         if (progress < 1) {
           animationFrameRef.current = requestAnimationFrame(animate);
@@ -127,7 +130,7 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
           if (toSize === 0) {
             panelRef.current.collapse();
           } else {
-            panelRef.current.resize(toSize);
+            panelRef.current.resize(`${toSize}%`);
           }
           setIsAnimating(false);
           if (onComplete) onComplete();
@@ -161,6 +164,13 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
     setIsCollapsed(false);
     setHideHandle(false); // Show handle immediately when expanding
     if (onExpandStart) onExpandStart();
+
+    // If panel is in collapsed state, expand it first so resize() works
+    // Then reset to 0% before animating to avoid jump
+    if (panelRef.current) {
+      panelRef.current.expand();
+      panelRef.current.resize('0%');
+    }
 
     // Animate from 0 to the default size
     animatePanel(0, defaultSize, () => {
@@ -221,11 +231,11 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
     }
   }, [collapsed, isAnimating]);
 
-  // On mount, if starting collapsed, immediately collapse the panel without animation
-  // This fixes the issue where defaultSize="0%" doesn't immediately collapse the panel
+
+  // On mount, if starting collapsed, call collapse() to match the library's internal state
+  // This ensures consistent behavior between initial collapsed and animated collapsed states
   useEffect(() => {
     if (collapsed && panelRef.current) {
-      // Use requestAnimationFrame to ensure the panel is mounted before collapsing
       requestAnimationFrame(() => {
         panelRef.current?.collapse();
       });
