@@ -221,6 +221,18 @@ export const AnimatedResizableLayout: React.FC<AnimatedResizableLayoutProps> = (
     }
   }, [collapsed, isAnimating]);
 
+  // On mount, if starting collapsed, immediately collapse the panel without animation
+  // This fixes the issue where defaultSize="0%" doesn't immediately collapse the panel
+  useEffect(() => {
+    if (collapsed && panelRef.current) {
+      // Use requestAnimationFrame to ensure the panel is mounted before collapsing
+      requestAnimationFrame(() => {
+        panelRef.current?.collapse();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount
+  }, []);
+
   useEffect(() => {
     const animationFrame = animationFrameRef.current;
     const animationTimeout = animationTimeoutRef.current;
