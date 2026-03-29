@@ -112,16 +112,8 @@
 }
 
 .resize-handle.collapsed {
-  width: 0 !important;
-  visibility: hidden;
-}
-
-.resize-handle.left-handle.collapsed {
-  margin-right: -1px;
-}
-
-.resize-handle.right-handle.collapsed {
-  margin-left: -1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Handle Bar with Collapse Button */

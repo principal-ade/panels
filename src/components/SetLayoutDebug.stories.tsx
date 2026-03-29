@@ -1989,3 +1989,227 @@ export const Test18_WithDisabledSeparators: Story = {
   name: '18. With disabled Separators',
   render: () => <WithDisabledSeparatorsComponent />,
 };
+
+// =============================================================================
+// TEST 19: Mimics ConfigurablePanelLayout's setLayout behavior exactly
+// This test helps debug why left=0 doesn't work but right=0 does
+// =============================================================================
+const MimicConfigurablePanelLayoutComponent = () => {
+  const groupRef = useRef<GroupImperativeHandle>(null);
+  const leftRef = useRef<PanelImperativeHandle>(null);
+  const rightRef = useRef<PanelImperativeHandle>(null);
+  const [log, setLog] = useState<string[]>([]);
+
+  const [leftSize, setLeftSize] = useState(33);
+  const [middleSize, setMiddleSize] = useState(34);
+  const [rightSize, setRightSize] = useState(33);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
+  const addLog = (msg: string) => {
+    setLog((prev) => [...prev.slice(-30), `${new Date().toISOString().slice(11, 23)}: ${msg}`]);
+  };
+
+  // Mimics ConfigurablePanelLayout's resize handlers
+  const handleLeftResize = useCallback((panelSize: PanelSize) => {
+    const size = panelSize.asPercentage;
+    addLog(`left.onResize: ${size.toFixed(2)}%`);
+    setLeftSize(size);
+    if (size > 0) {
+      setLeftCollapsed(false);
+    } else {
+      setLeftCollapsed(true);
+    }
+  }, []);
+
+  const handleMiddleResize = useCallback((panelSize: PanelSize) => {
+    const size = panelSize.asPercentage;
+    addLog(`middle.onResize: ${size.toFixed(2)}%`);
+    setMiddleSize(size);
+  }, []);
+
+  const handleRightResize = useCallback((panelSize: PanelSize) => {
+    const size = panelSize.asPercentage;
+    addLog(`right.onResize: ${size.toFixed(2)}%`);
+    setRightSize(size);
+    if (size > 0) {
+      setRightCollapsed(false);
+    } else {
+      setRightCollapsed(true);
+    }
+  }, []);
+
+  // EXACTLY what ConfigurablePanelLayout.setLayout does
+  const mimicSetLayout = (sizes: { left: number; middle: number; right: number }) => {
+    addLog(`\n=== mimicSetLayout(${JSON.stringify(sizes)}) ===`);
+
+    const currentLayout = groupRef.current?.getLayout();
+    const currentLeftSize = currentLayout?.left ?? 0;
+    const currentRightSize = currentLayout?.right ?? 0;
+    addLog(`Current layout: ${JSON.stringify(currentLayout)}`);
+
+    const shouldCollapseLeft = sizes.left === 0 || sizes.left < 1;
+    const shouldCollapseRight = sizes.right === 0 || sizes.right < 1;
+    const currentLeftCollapsed = currentLeftSize < 1;
+    const currentRightCollapsed = currentRightSize < 1;
+
+    addLog(`shouldCollapseLeft=${shouldCollapseLeft}, currentLeftCollapsed=${currentLeftCollapsed}`);
+    addLog(`shouldCollapseRight=${shouldCollapseRight}, currentRightCollapsed=${currentRightCollapsed}`);
+
+    // Handle left panel collapse/expand
+    if (shouldCollapseLeft && !currentLeftCollapsed) {
+      addLog(`Calling leftRef.collapse()`);
+      leftRef.current?.collapse();
+      setLeftCollapsed(true);
+    } else if (!shouldCollapseLeft && currentLeftCollapsed) {
+      addLog(`Calling leftRef.expand()`);
+      leftRef.current?.expand();
+      setLeftCollapsed(false);
+    }
+
+    // Handle right panel collapse/expand
+    if (shouldCollapseRight && !currentRightCollapsed) {
+      addLog(`Calling rightRef.collapse()`);
+      rightRef.current?.collapse();
+      setRightCollapsed(true);
+    } else if (!shouldCollapseRight && currentRightCollapsed) {
+      addLog(`Calling rightRef.expand()`);
+      rightRef.current?.expand();
+      setRightCollapsed(false);
+    }
+
+    const needsExpandLeft = !shouldCollapseLeft && currentLeftCollapsed;
+    const needsExpandRight = !shouldCollapseRight && currentRightCollapsed;
+
+    if (needsExpandLeft || needsExpandRight) {
+      addLog(`Waiting for expand, then setLayout`);
+      requestAnimationFrame(() => {
+        addLog(`RAF: Calling groupRef.setLayout(${JSON.stringify(sizes)})`);
+        groupRef.current?.setLayout(sizes);
+      });
+    } else {
+      addLog(`Calling groupRef.setLayout(${JSON.stringify(sizes)}) immediately`);
+      groupRef.current?.setLayout(sizes);
+    }
+
+    setTimeout(() => {
+      addLog(`After 200ms: ${JSON.stringify(groupRef.current?.getLayout())}`);
+    }, 200);
+  };
+
+  // Test with ONLY collapse(), no setLayout
+  const collapseOnly = (panel: 'left' | 'right') => {
+    addLog(`\n=== ${panel}Ref.collapse() ONLY ===`);
+    if (panel === 'left') {
+      leftRef.current?.collapse();
+      setLeftCollapsed(true);
+    } else {
+      rightRef.current?.collapse();
+      setRightCollapsed(true);
+    }
+    setTimeout(() => {
+      addLog(`After 200ms: ${JSON.stringify(groupRef.current?.getLayout())}`);
+    }, 200);
+  };
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: 12, background: '#1a1a2e', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <strong style={{ marginRight: 8 }}>Test 19: Mimic ConfigurablePanelLayout</strong>
+      </div>
+      <div style={{ padding: 8, background: '#2d2d44', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, marginRight: 8 }}>mimicSetLayout:</span>
+        <button onClick={() => mimicSetLayout({ left: 0, middle: 50, right: 50 })} style={{...btnStyle, backgroundColor: '#e53e3e'}}>
+          0/50/50 (left=0)
+        </button>
+        <button onClick={() => mimicSetLayout({ left: 50, middle: 50, right: 0 })} style={{...btnStyle, backgroundColor: '#38a169'}}>
+          50/50/0 (right=0)
+        </button>
+        <button onClick={() => mimicSetLayout({ left: 33, middle: 34, right: 33 })} style={btnStyle}>
+          33/34/33 (reset)
+        </button>
+      </div>
+      <div style={{ padding: 8, background: '#3d3d54', color: '#fff', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, marginRight: 8 }}>collapse() only:</span>
+        <button onClick={() => collapseOnly('left')} style={{...btnStyle, backgroundColor: '#805ad5'}}>
+          collapse left only
+        </button>
+        <button onClick={() => collapseOnly('right')} style={{...btnStyle, backgroundColor: '#805ad5'}}>
+          collapse right only
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flex: 1 }}>
+        <div className="three-panel-layout" style={{ flex: 1 }}>
+          <Group
+            groupRef={groupRef}
+            orientation="horizontal"
+            onLayoutChange={() => addLog('onLayoutChange (drag start)')}
+            onLayoutChanged={(layout) => addLog(`onLayoutChanged: ${JSON.stringify(layout)}`)}
+          >
+            <Panel
+              id="left"
+              panelRef={leftRef}
+              defaultSize="33%"
+              collapsible={true}
+              collapsedSize="0%"
+              minSize="0%"
+              onResize={handleLeftResize}
+              className={`three-panel-item collapsible-panel ${leftCollapsed ? 'collapsed' : ''}`}
+            >
+              <div style={{...panelStyle('#e3f2fd'), background: leftCollapsed ? '#ffcdd2' : '#e3f2fd'}}>
+                LEFT {leftCollapsed ? '(COLLAPSED)' : `(${leftSize.toFixed(1)}%)`}
+              </div>
+            </Panel>
+            <Separator
+              className={`resize-handle left-handle ${leftCollapsed ? 'collapsed' : ''}`}
+              disabled={leftCollapsed}
+            />
+            <Panel
+              id="middle"
+              defaultSize="34%"
+              minSize="0%"
+              onResize={handleMiddleResize}
+              className="three-panel-item"
+            >
+              <div style={panelStyle('#f3e5f5')}>MIDDLE ({middleSize.toFixed(1)}%)</div>
+            </Panel>
+            <Separator
+              className={`resize-handle right-handle ${rightCollapsed ? 'collapsed' : ''}`}
+              disabled={rightCollapsed}
+            />
+            <Panel
+              id="right"
+              panelRef={rightRef}
+              defaultSize="33%"
+              collapsible={true}
+              collapsedSize="0%"
+              minSize="0%"
+              onResize={handleRightResize}
+              className={`three-panel-item collapsible-panel ${rightCollapsed ? 'collapsed' : ''}`}
+            >
+              <div style={{...panelStyle('#e8f5e9'), background: rightCollapsed ? '#ffcdd2' : '#e8f5e9'}}>
+                RIGHT {rightCollapsed ? '(COLLAPSED)' : `(${rightSize.toFixed(1)}%)`}
+              </div>
+            </Panel>
+          </Group>
+        </div>
+        <div style={logStyle}>
+          <div style={{ fontWeight: 600, marginBottom: 8, color: '#58a6ff' }}>Event Log</div>
+          <div style={{ marginBottom: 8, padding: 4, background: '#1a1a2e', borderRadius: 4, fontSize: 10 }}>
+            State: L={leftCollapsed ? 'COLLAPSED' : leftSize.toFixed(0)} | M={middleSize.toFixed(0)} | R={rightCollapsed ? 'COLLAPSED' : rightSize.toFixed(0)}
+          </div>
+          {log.map((entry, i) => <div key={i}>{entry}</div>)}
+          <button onClick={() => setLog([])} style={{...btnStyle, marginTop: 8, backgroundColor: '#4a5568', fontSize: 10}}>
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const Test19_MimicConfigurablePanelLayout: Story = {
+  name: '19. Mimic ConfigurablePanelLayout',
+  render: () => <MimicConfigurablePanelLayoutComponent />,
+};
