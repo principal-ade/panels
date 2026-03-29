@@ -334,23 +334,35 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
 
       // Handle left panel collapse/expand
       if (shouldCollapseLeft && !currentLeftCollapsed) {
+        onLeftCollapseStart?.();
         leftPanelRef.current?.collapse();
         // Delay setting collapsed state until animation completes
         // to avoid hiding content before animation finishes
-        setTimeout(() => setLeftCollapsed(true), animationDuration);
+        setTimeout(() => {
+          setLeftCollapsed(true);
+          onLeftCollapseComplete?.();
+        }, animationDuration);
       } else if (!shouldCollapseLeft && currentLeftCollapsed) {
+        onLeftExpandStart?.();
         leftPanelRef.current?.expand();
         setLeftCollapsed(false);
+        setTimeout(() => onLeftExpandComplete?.(), animationDuration);
       }
 
       // Handle right panel collapse/expand
       if (shouldCollapseRight && !currentRightCollapsed) {
+        onRightCollapseStart?.();
         rightPanelRef.current?.collapse();
         // Delay setting collapsed state until animation completes
-        setTimeout(() => setRightCollapsed(true), animationDuration);
+        setTimeout(() => {
+          setRightCollapsed(true);
+          onRightCollapseComplete?.();
+        }, animationDuration);
       } else if (!shouldCollapseRight && currentRightCollapsed) {
+        onRightExpandStart?.();
         rightPanelRef.current?.expand();
         setRightCollapsed(false);
+        setTimeout(() => onRightExpandComplete?.(), animationDuration);
       }
 
       // After expand/collapse, set the actual sizes
