@@ -1,6 +1,6 @@
 {
   "name": "@principal-ade/panels",
-  "version": "1.0.83",
+  "version": "1.0.84",
   "description": "A modern React panel layout component library built on top of react-resizable-panels",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
