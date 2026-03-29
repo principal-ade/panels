@@ -112,8 +112,10 @@
 }
 
 .three-panel-layout .resize-handle.collapsed {
-  opacity: 0;
-  pointer-events: none;
+  width: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: visible !important;
 }
 
 /* Handle Bar with Collapse Button */
