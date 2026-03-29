@@ -57,8 +57,8 @@
   box-sizing: border-box;
 }
 
-/* Resize Handle Styles */
-.resize-handle {
+/* Resize Handle Styles - scoped to .three-panel-layout to avoid conflicts with React Flow */
+.three-panel-layout .resize-handle {
   position: relative;
   display: flex;
   align-items: center;
@@ -70,7 +70,7 @@
 }
 
 /* Invisible expanded hit area */
-.resize-handle::before {
+.three-panel-layout .resize-handle::before {
   content: '';
   position: absolute;
   top: 0;
@@ -81,7 +81,7 @@
 }
 
 /* Hover background that appears behind the line */
-.resize-handle::after {
+.three-panel-layout .resize-handle::after {
   content: '';
   position: absolute;
   top: 0;
@@ -94,30 +94,30 @@
   z-index: -1;
 }
 
-.resize-handle:hover::after {
+.three-panel-layout .resize-handle:hover::after {
   opacity: 1;
 }
 
-.resize-handle:hover {
+.three-panel-layout .resize-handle:hover {
   background: var(--panel-handle-hover);
 }
 
-.resize-handle:active::after {
+.three-panel-layout .resize-handle:active::after {
   opacity: 1;
   background: var(--panel-handle-active);
 }
 
-.resize-handle:active {
+.three-panel-layout .resize-handle:active {
   background: var(--panel-handle-active);
 }
 
-.resize-handle.collapsed {
+.three-panel-layout .resize-handle.collapsed {
   opacity: 0;
   pointer-events: none;
 }
 
 /* Handle Bar with Collapse Button */
-.handle-bar {
+.three-panel-layout .handle-bar {
   position: relative;
   width: 100%;
   height: 100%;
@@ -127,7 +127,7 @@
   z-index: 2;
 }
 
-.collapse-toggle {
+.three-panel-layout .collapse-toggle {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -149,15 +149,15 @@
   line-height: 1;
 }
 
-.collapse-toggle:hover {
+.three-panel-layout .collapse-toggle:hover {
   background: var(--panel-button-hover);
 }
 
-.collapse-toggle:active {
+.three-panel-layout .collapse-toggle:active {
   opacity: 0.8;
 }
 
-.collapse-toggle:disabled {
+.three-panel-layout .collapse-toggle:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -165,17 +165,17 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   /* Larger hit area on mobile for easier touch interaction */
-  .resize-handle::before {
+  .three-panel-layout .resize-handle::before {
     left: -8px;
     right: -8px;
   }
 
-  .resize-handle::after {
+  .three-panel-layout .resize-handle::after {
     left: -8px;
     right: -8px;
   }
 
-  .collapse-toggle {
+  .three-panel-layout .collapse-toggle {
     width: 24px;
     height: 48px;
     font-size: 14px;
