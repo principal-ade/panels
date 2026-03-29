@@ -111,6 +111,12 @@
   background: var(--panel-handle-active);
 }
 
+/*
+ * IMPORTANT: Must use !important and scope to .three-panel-layout to override
+ * React Flow's .resize-handle.collapsed { width: 0 !important; visibility: hidden; }
+ * Without this, the collapsed separator width causes drag calculation bugs.
+ * See: https://github.com/principal-ade/panels/issues/XXX
+ */
 .three-panel-layout .resize-handle.collapsed {
   width: 1px !important;
   opacity: 0 !important;
