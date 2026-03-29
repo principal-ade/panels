@@ -193,6 +193,10 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // State for drag detection
   const [isDragging, setIsDragging] = useState(false);
 
+  // Ref to track programmatic collapse/expand - prevents resize handlers from
+  // resetting collapsed state during animation
+  const isAnimatingCollapseRef = useRef(false);
+
   // State to track if component has mounted - disables transitions on first render
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
@@ -314,17 +318,12 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   // Expose imperative API for programmatic control
   useImperativeHandle(ref, () => ({
     setLayout: (sizes: { left: number; middle: number; right: number }) => {
-      console.log('[ConfigurablePanelLayout] setLayout called with:', sizes);
-      if (!panelGroupRef.current) {
-        console.warn('[ConfigurablePanelLayout] setLayout called but panelGroupRef is null');
-        return;
-      }
+      if (!panelGroupRef.current) return;
 
       // Get CURRENT layout from the actual panel group to avoid stale closure issues
       const currentLayout = panelGroupRef.current.getLayout();
       const currentLeftSize = currentLayout.left ?? 0;
       const currentRightSize = currentLayout.right ?? 0;
-      console.log('[ConfigurablePanelLayout] current layout:', { currentLeftSize, currentRightSize });
 
       // Handle collapse/expand via panel refs for reliable behavior
       // react-resizable-panels setLayout doesn't always work for 0 sizes
@@ -332,7 +331,6 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       const shouldCollapseRight = sizes.right === 0 || sizes.right < 1;
       const currentLeftCollapsed = currentLeftSize < 1;
       const currentRightCollapsed = currentRightSize < 1;
-      console.log('[ConfigurablePanelLayout] collapse decisions:', { shouldCollapseLeft, shouldCollapseRight, currentLeftCollapsed, currentRightCollapsed });
 
       // Handle left panel collapse/expand
       if (shouldCollapseLeft && !currentLeftCollapsed) {
@@ -360,41 +358,49 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
       if (needsExpandLeft || needsExpandRight) {
         // After expanding, we need to set the layout with correct sizes
         // Use requestAnimationFrame to ensure expand animation has started
-        console.log('[ConfigurablePanelLayout] needs expand, using rAF');
         requestAnimationFrame(() => {
-          console.log('[ConfigurablePanelLayout] rAF: calling panelGroupRef.setLayout');
           panelGroupRef.current?.setLayout(sizes);
-          setTimeout(() => {
-            console.log('[ConfigurablePanelLayout] after rAF setLayout:', panelGroupRef.current?.getLayout());
-          }, 100);
         });
       } else {
         // Either collapsing, or no collapse/expand needed - set the layout directly
         // This handles cases like Storybook preset { left: 0, middle: 50, right: 50 }
         // where left is collapsed but we still need to resize middle and right
-        console.log('[ConfigurablePanelLayout] direct setLayout (no expand needed)');
         panelGroupRef.current.setLayout(sizes);
-        setTimeout(() => {
-          console.log('[ConfigurablePanelLayout] after direct setLayout:', panelGroupRef.current?.getLayout());
-        }, 100);
       }
     },
     collapsePanel: (panel: 'left' | 'right') => {
+      // Set animating flag to prevent resize handlers from resetting collapsed state
+      isAnimatingCollapseRef.current = true;
+
       if (panel === 'left') {
         leftPanelRef.current?.collapse();
-        setLeftCollapsed(true);
+        // Delay setting collapsed state until animation completes
+        setTimeout(() => {
+          setLeftCollapsed(true);
+          isAnimatingCollapseRef.current = false;
+        }, animationDuration);
       } else {
         rightPanelRef.current?.collapse();
-        setRightCollapsed(true);
+        setTimeout(() => {
+          setRightCollapsed(true);
+          isAnimatingCollapseRef.current = false;
+        }, animationDuration);
       }
     },
     expandPanel: (panel: 'left' | 'right') => {
+      // Set animating flag to prevent resize handlers from resetting collapsed state
+      isAnimatingCollapseRef.current = true;
+      setTimeout(() => {
+        isAnimatingCollapseRef.current = false;
+      }, animationDuration);
+
+      // Set collapsed state immediately so content is visible as panel expands
       if (panel === 'left') {
-        leftPanelRef.current?.expand();
         setLeftCollapsed(false);
+        leftPanelRef.current?.expand();
       } else {
-        rightPanelRef.current?.expand();
         setRightCollapsed(false);
+        rightPanelRef.current?.expand();
       }
     },
     getLayout: () => ({
@@ -408,6 +414,10 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   const handleLeftResize = useCallback((panelSize: PanelSize) => {
     const size = panelSize.asPercentage;
     setLeftSize(size);
+
+    // Skip collapsed state updates during programmatic collapse/expand animation
+    if (isAnimatingCollapseRef.current) return;
+
     if (size > 0) {
       setLastExpandedLeftSize(size);
       setLeftCollapsed(false);
@@ -419,6 +429,10 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   const handleMiddleResize = useCallback((panelSize: PanelSize) => {
     const size = panelSize.asPercentage;
     setMiddleSize(size);
+
+    // Skip collapsed state updates during programmatic collapse/expand animation
+    if (isAnimatingCollapseRef.current) return;
+
     if (size > 0) {
       setLastExpandedMiddleSize(size);
       setMiddleCollapsed(false);
@@ -430,6 +444,10 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
   const handleRightResize = useCallback((panelSize: PanelSize) => {
     const size = panelSize.asPercentage;
     setRightSize(size);
+
+    // Skip collapsed state updates during programmatic collapse/expand animation
+    if (isAnimatingCollapseRef.current) return;
+
     if (size > 0) {
       setLastExpandedRightSize(size);
       setRightCollapsed(false);
@@ -519,10 +537,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           className={getPanelClassName('left')}
           {...(slotDataAttributes.left || {})}
         >
-          <div
-            className="panel-content-wrapper"
-            style={{ opacity: leftCollapsed ? 0 : 1 }}
-          >
+          <div className="panel-content-wrapper">
             <PanelBoundsProvider slot="left">
               {leftPanel}
             </PanelBoundsProvider>
@@ -559,10 +574,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           className={getPanelClassName('middle')}
           {...(slotDataAttributes.middle || {})}
         >
-          <div
-            className="panel-content-wrapper"
-            style={{ opacity: middleCollapsed ? 0 : 1 }}
-          >
+          <div className="panel-content-wrapper">
             <PanelBoundsProvider slot="middle">
               {middlePanel}
             </PanelBoundsProvider>
@@ -599,10 +611,7 @@ export const ConfigurablePanelLayout: React.ForwardRefExoticComponent<
           className={getPanelClassName('right')}
           {...(slotDataAttributes.right || {})}
         >
-          <div
-            className="panel-content-wrapper"
-            style={{ opacity: rightCollapsed ? 0 : 1 }}
-          >
+          <div className="panel-content-wrapper">
             <PanelBoundsProvider slot="right">
               {rightPanel}
             </PanelBoundsProvider>
